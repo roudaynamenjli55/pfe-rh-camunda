@@ -1,0 +1,70 @@
+server:
+  port: 8081
+
+# --- Configuration Camunda BPM ---
+camunda:
+  bpm:
+    # Type de base de données pour Camunda
+    database:
+      type: postgres
+    # Création automatique du filtre utilisateur admin
+    filter:
+      create: All
+    # Exécution des jobs (processus asynchrones)
+    generic-properties:
+      job-execution-enabled: true
+    # Compte administrateur Camunda par défaut
+    admin-user:
+      id: admin
+      password: admin
+      firstName: Admin
+      lastName: Admin
+    auto-deployment-enabled: false
+
+# --- Configuration Spring Boot & PostgreSQL ---
+spring:
+  datasource:
+    # URL de connexion à ta base PostgreSQL
+    url: jdbc:postgresql://localhost:5432/sirhdb
+    # Pilote JDBC pour PostgreSQL
+    driver-class-name: org.postgresql.Driver
+    # Tes identifiants PostgreSQL
+    username: postgres
+    password: 1234
+
+  jpa:
+    hibernate:
+      # Mettre à jour le schéma automatiquement (crée les tables si elles n'existent pas)
+      ddl-auto: update
+    # Afficher les requêtes SQL dans la console pour le débogage
+    show-sql: true
+    # Dialecte spécifique à PostgreSQL
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Désactivation de la console H2 (car on utilise Postgres)
+  h2:
+    console:
+      enabled: false
+
+  # --- Configuration Sécurité OAuth2 / Keycloak ---
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # L'URL de ton Realm Keycloak (PFEE-REALM)
+          issuer-uri: http://localhost:8080/realms/PFEE-REALM
+          # URL des clés publiques pour vérifier les tokens
+          jwk-set-uri: http://localhost:8080/realms/PFEE-REALM/protocol/openid-connect/certs
+
+# --- Configuration des Logs ---
+logging:
+  level:
+    root: INFO
+    org.springframework.boot: INFO
+    org.springframework.security: DEBUG
+    org.camunda: INFO
+    org.hibernate.SQL: DEBUG       # Voir les requêtes SQL générées
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE # Voir les valeurs des paramètres
