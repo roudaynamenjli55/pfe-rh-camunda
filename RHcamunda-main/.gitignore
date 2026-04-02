@@ -1,0 +1,59 @@
+node_modules
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+# compiled output
+/dist
+/tmp
+/out-tsc
+/bazel-out
+
+# dependencies
+/node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# IDEs and editors
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# misc
+/.angular
+/.cache
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+testem.log
+typings/
+
+# system files
+.DS_Store
+Thumbs.db
+
+# environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Angular specific
+.angular/cache
+.angular/config.json
+
+# logs
+logs
+*.log
+
+# e2e
+/protractor.conf.js
+
+# firebase
+.firebase/
+
+# temporary files
+*.tmp
+*.temp
