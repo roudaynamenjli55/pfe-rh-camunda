@@ -21,6 +21,7 @@ public class DataInitializer implements CommandLineRunner {
         createRoleIfNotExists("RH", "Ressources Humaines");
     }
 
+
     private void createRoleIfNotExists(String code, String libelle) {
         if (!roleRepository.existsByCode(code)) {
             Role role = new Role(code, libelle);

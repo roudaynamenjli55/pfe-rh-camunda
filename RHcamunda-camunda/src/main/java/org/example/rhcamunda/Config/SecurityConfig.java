@@ -12,6 +12,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher; // ✅ IMPORTANT
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -42,45 +43,38 @@ public class SecurityConfig {
 
                 // ==================== HEADERS ====================
                 .headers(headers -> headers
-                        .frameOptions(frame -> frame.disable()) // Pour H2 Console
+                        .frameOptions(frame -> frame.disable())
                 )
 
                 // ==================== AUTHORIZATION ====================
                 .authorizeHttpRequests(auth -> auth
-                        // --- 🔓 ENDPOINTS PUBLICS (NO AUTH REQUIRED) ---
-                        .requestMatchers("/api/auth/**").permitAll()        // ← LOGIN, CHECK, etc.
-                        .requestMatchers("/api/test/public").permitAll()
-                        .requestMatchers("/api/public/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers("/actuator/info").permitAll()
-                        .requestMatchers("/swagger-ui/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**").permitAll()
-                        .requestMatchers("/error").permitAll()
+                        // ✅ TOUS AVEC AntPathRequestMatcher EXPLICITE
+                        .requestMatchers(new AntPathRequestMatcher("/api/auth/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/camunda/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/test/public")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/public/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/actuator/health")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/actuator/info")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
 
-                        // --- 🎭 CAMUNDA (pour dev) ---
-                        .requestMatchers("/camunda/**").permitAll()
-                        .requestMatchers("/engine-rest/**").permitAll()
+                        // 🎭 CAMUNDA - TOUS AVEC AntPathRequestMatcher
+                        .requestMatchers(new AntPathRequestMatcher("/camunda/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/engine-rest/**")).permitAll()
 
-                        // --- 🔐 ENDPOINTS PROTÉGÉS PAR RÔLE ---
+                        // 🔐 ENDPOINTS PROTÉGÉS
+                        .requestMatchers(new AntPathRequestMatcher("/api/admin/**")).hasRole("ADMIN")
+                        .requestMatchers(new AntPathRequestMatcher("/api/rh/**")).hasAnyRole("RH", "ADMIN")
+                        .requestMatchers(new AntPathRequestMatcher("/api/chef/**")).hasAnyRole("CHEF_HIERARCHIQUE", "RH", "ADMIN")
+                        .requestMatchers(new AntPathRequestMatcher("/api/employe/**")).hasAnyRole("EMPLOYE", "CHEF_HIERARCHIQUE", "RH", "ADMIN")
 
-                        // ADMIN uniquement
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
-                        // RH ou ADMIN
-                        .requestMatchers("/api/rh/**").hasAnyRole("RH", "ADMIN")
-
-                        // CHEF_HIERARCHIQUE, RH ou ADMIN
-                        .requestMatchers("/api/chef/**").hasAnyRole("CHEF_HIERARCHIQUE", "RH", "ADMIN")
-
-                        // EMPLOYE ou supérieur
-                        .requestMatchers("/api/employe/**").hasAnyRole("EMPLOYE", "CHEF_HIERARCHIQUE", "RH", "ADMIN")
-
-                        // --- 🔒 TOUT LE RESTE REQUIERT AUTHENTIFICATION ---
+                        // 🔒 TOUT LE RESTE
                         .anyRequest().authenticated()
                 )
 
-                // ==================== OAUTH2 RESOURCE SERVER (KEYCLOAK) ====================
+                // ==================== OAUTH2 ====================
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())
@@ -90,19 +84,16 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ==================== CORS CONFIGURATION ====================
+    // ==================== CORS ====================
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // Autoriser les origins (frontend Angular + backend)
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:4200",
                 "http://localhost:8081",
                 "http://127.0.0.1:4200",
                 "http://127.0.0.1:8081"
         ));
-
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -113,7 +104,7 @@ public class SecurityConfig {
         return source;
     }
 
-    // ==================== JWT AUTHENTICATION CONVERTER ====================
+    // ==================== JWT CONVERTER ====================
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
@@ -121,15 +112,14 @@ public class SecurityConfig {
         return converter;
     }
 
-    // ==================== KEYCLOAK ROLE CONVERTER ====================
+    // ==================== ROLE CONVERTER ====================
     @SuppressWarnings("unchecked")
     static class KeycloakRealmRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
-
         @Override
         public Collection<GrantedAuthority> convert(Jwt jwt) {
             List<GrantedAuthority> authorities = new ArrayList<>();
 
-            // 1️⃣ Extraire les rôles de realm_access
+            // Realm roles
             Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
             if (realmAccess != null && realmAccess.containsKey("roles")) {
                 List<String> roles = (List<String>) realmAccess.get("roles");
@@ -139,7 +129,7 @@ public class SecurityConfig {
                 }
             }
 
-            // 2️⃣ Extraire les rôles du client (resource_access)
+            // Client roles
             Map<String, Object> resourceAccess = jwt.getClaimAsMap("resource_access");
             if (resourceAccess != null) {
                 Map<String, Object> clientAccess = (Map<String, Object>) resourceAccess.get("spring-boot-client");

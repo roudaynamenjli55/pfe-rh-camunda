@@ -19,7 +19,9 @@ camunda:
       password: admin
       firstName: Admin
       lastName: Admin
-    auto-deployment-enabled: false
+    auto-deployment-enabled: true
+    deployment:
+      resource-pattern: classpath*:processes/*.bpmn
 
 # --- Configuration Spring Boot & PostgreSQL ---
 spring:
@@ -65,6 +67,9 @@ logging:
     root: INFO
     org.springframework.boot: INFO
     org.springframework.security: DEBUG
-    org.camunda: INFO
+    org.camunda: DEBUG
     org.hibernate.SQL: DEBUG       # Voir les requêtes SQL générées
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE # Voir les valeurs des paramètres
+    org.camunda.bpm.engine: DEBUG
+    org.camunda.bpm.engine.cfg: DEBUG
+    org.camunda.bpm.engine.impl: DEBUG
