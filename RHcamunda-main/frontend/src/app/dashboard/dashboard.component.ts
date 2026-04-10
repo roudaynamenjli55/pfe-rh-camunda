@@ -6,18 +6,23 @@ import { KeycloakService } from '../core/services/keycloak.service';
 @Component({
   selector: 'app-dashboard',
   imports: [CommonModule],
+  standalone: true,
   template: `
     <div class="dashboard">
       <h1>Bienvenue {{ username }}!</h1>
       
       <h2>Utilisateurs:</h2>
-      <ul *ngIf="users.length > 0">
-        <li *ngFor="let user of users">
-          {{ user.username }} - {{ user.email }}
-        </li>
-      </ul>
+      @if (users.length > 0) {
+        <ul>
+          @for (user of users; track user.id) {
+            <li>{{ user.username }} - {{ user.email }}</li>
+          }
+        </ul>
+      }
       
-      <p *ngIf="users.length === 0">Aucun utilisateur</p>
+      @if (users.length === 0) {
+        <p>Aucun utilisateur</p>
+      }
       
       <button (click)="loadUsers()">Rafraîchir</button>
       <button (click)="logout()">Déconnexion</button>

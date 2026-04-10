@@ -1,1 +1,176 @@
-<router-outlet></router-outlet>
+<div class="liste-conges-container">
+  <div class="content-wrapper">
+    
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <div>
+          <h1>Mes Demandes de Congé</h1>
+          <p>Gérez vos demandes de congés et absences</p>
+        </div>
+        <button class="btn-new-request" (click)="nouvelleDemande()">
+          <span class="icon">+</span>
+          Nouvelle Demande
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card stat-primary">
+        <div class="stat-icon">📅</div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.joursRestants }}</div>
+          <div class="stat-label">Jours restants</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📋</div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.demandesAnnee }}</div>
+          <div class="stat-label">Demandes cette année</div>
+        </div>
+      </div>
+      <div class="stat-card stat-warning">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.enAttente }}</div>
+          <div class="stat-label">En attente</div>
+        </div>
+      </div>
+      <div class="stat-card stat-info">
+        <div class="stat-icon">✅</div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.joursPris }}</div>
+          <div class="stat-label">Jours pris</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label>Type de congé</label>
+          <select [(ngModel)]="filters.typeConge">
+            <option *ngFor="let type of typesConge" [value]="type">{{ type }}</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Statut</label>
+          <select [(ngModel)]="filters.statut">
+            <option *ngFor="let statut of statuts" [value]="statut">{{ statut }}</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Période</label>
+          <select [(ngModel)]="filters.periode">
+            <option *ngFor="let periode of periodes" [value]="periode">{{ periode }}</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button class="btn-filter" (click)="filtrer()">🔍 Filtrer</button>
+          <button class="btn-reset">Réinitialiser</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Requests List -->
+    <div class="requests-list">
+      <div class="request-card" *ngFor="let demande of demandes">
+        
+        <!-- Card Header -->
+        <div class="request-header">
+          <div class="request-type">
+            <span class="type-icon">
+              {{ demande.type === 'Congé Annuel' ? '🏖️' : '🏥' }}
+            </span>
+            <div>
+              <!-- Le titre reste statique pour garder la structure, ou input si tu veux -->
+              <h3>{{ demande.type }}</h3>
+              <span class="request-date">Demandé le {{ demande.dateDemande | date:'dd MMMM yyyy' }}</span>
+            </div>
+          </div>
+          <div class="request-status" [ngClass]="getStatusClass(demande.statut)">
+            <span class="status-icon">{{ getStatusIcon(demande.statut) }}</span>
+            {{ demande.statut }}
+          </div>
+        </div>
+
+        <!-- Card Body (Inputs Modifiables) -->
+        <div class="request-body">
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Date de début</label>
+              <input type="date" [(ngModel)]="demande.dateDebut">
+            </div>
+            <div class="info-item">
+              <label>Date de fin</label>
+              <input type="date" [(ngModel)]="demande.dateFin">
+            </div>
+            <div class="info-item">
+              <label>Durée</label>
+              <input type="number" [(ngModel)]="demande.duree">
+            </div>
+            <div class="info-item">
+              <label>Motif</label>
+              <input type="text" [(ngModel)]="demande.motif">
+            </div>
+            
+            <!-- Conditionnel: Validé par -->
+            <div class="info-item" *ngIf="demande.validePar">
+              <label>Validé par</label>
+              <input type="text" [(ngModel)]="demande.validePar">
+            </div>
+            
+            <!-- Conditionnel: Justificatif -->
+            <div class="info-item" *ngIf="demande.justificatif">
+              <label>Justificatif</label>
+              <input type="text" value="Fourni" disabled class="badge-success">
+            </div>
+          </div>
+
+          <!-- Progression (Reste visuelle) -->
+          <div class="progression-section">
+            <label>Progression</label>
+            <div class="progression-steps">
+              <ng-container *ngFor="let step of demande.progression; let i = index">
+                <div class="progress-step" 
+                     [ngClass]="{
+                       'completed': i < demande.etapeActuelle,
+                       'active': i === demande.etapeActuelle
+                     }">
+                  <div class="step-marker">
+                    <span *ngIf="i < demande.etapeActuelle">✓</span>
+                    <span *ngIf="i === demande.etapeActuelle">⏳</span>
+                  </div>
+                  <div class="step-label">{{ step }}</div>
+                  <div class="step-connector" *ngIf="i < demande.progression.length - 1"></div>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Actions -->
+        <div class="request-actions">
+          <button class="btn-action btn-details" (click)="voirDetails(demande)">👁️ Détails</button>
+          
+          <ng-container *ngIf="demande.statut === 'En attente'">
+            <button class="btn-action btn-edit" (click)="modifier(demande)">✏️ Modifier</button>
+            <button class="btn-action btn-cancel" (click)="annuler(demande)">🗑️ Annuler</button>
+          </ng-container>
+          
+          <ng-container *ngIf="demande.statut === 'Approuvé'">
+            <button class="btn-action btn-download" (click)="telecharger(demande)">📄 Titre de congé</button>
+          </ng-container>
+          
+          <ng-container *ngIf="demande.justificatif">
+            <button class="btn-action btn-attachment">📎 Justificatif</button>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

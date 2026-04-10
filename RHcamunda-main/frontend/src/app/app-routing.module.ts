@@ -4,13 +4,16 @@ import { RouterModule, Routes } from '@angular/router';
 export const routes: Routes = [
   { path: 'auth', loadChildren: () => import('./auth/auth.module').then(m => m.AuthModule) },
   
-  // ← AJOUT DE LA ROUTE TEST-API ICI
+  // ✅ Route pour le module Congés
   { 
-    path: 'test-api', 
-    loadComponent: () => import('./test-api/test-api.component').then(m => m.TestApiComponent) 
+    path: 'conges', 
+    loadChildren: () => import('./conge/conges.module').then(m => m.CongesModule) 
   },
   
+  // ✅ Redirection par défaut vers login (PAS vers conges!)
   { path: '', redirectTo: '/auth/login', pathMatch: 'full' },
+  
+  // ✅ Wildcard pour les routes inconnues → login
   { path: '**', redirectTo: '/auth/login' }
 ];
 
