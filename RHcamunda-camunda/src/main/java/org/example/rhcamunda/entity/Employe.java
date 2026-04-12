@@ -39,8 +39,8 @@ public class Employe {
 
     private LocalDate dateNaissance;
 
-    @CreationTimestamp
-    private LocalDateTime dateEmbauche;
+    // 🔧 CHANGÉ : LocalDate au lieu de LocalDateTime
+    private LocalDate dateEmbauche;
 
     private String adresse;
 
@@ -48,10 +48,11 @@ public class Employe {
     private Double soldeConge = 30.0;
 
     @Builder.Default
-    private Integer soldeAutorisation = 0;
+    private Integer soldeAutorisation = 12; // 2/mois × 6 mois
 
+    // 🔧 CHANGÉ : "actif" au lieu de "archive" (plus clair)
     @Builder.Default
-    private Boolean archive = false;
+    private Boolean actif = true;
 
     private LocalDateTime dateArretChivage;
 
@@ -97,13 +98,15 @@ public class Employe {
     @Builder.Default
     private List<Autorisation> autorisations = new ArrayList<>();
 
-    // ⚠️ logActions SUPPRIMÉ : LogAction est lié à Utilisateur, pas Employe
-    // Si tu veux accéder aux logs d'un employé, passe par: employe.getUtilisateur().getLogActions()
-
     // ==================== MÉTHODES UTILITAIRES ====================
 
     public String getFullName() {
         return prenom + " " + nom;
+    }
+
+    // ✅ AJOUTÉ : Méthode getNomComplet() pour compatibilité
+    public String getNomComplet() {
+        return getFullName(); // ou: return prenom + " " + nom;
     }
 
     public boolean hasSoldeSuffisant(int jours) {

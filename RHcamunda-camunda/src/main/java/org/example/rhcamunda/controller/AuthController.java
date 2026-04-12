@@ -1,7 +1,7 @@
 package org.example.rhcamunda.controller;
 
-import org.example.rhcamunda.dto.LoginRequest;
-import org.example.rhcamunda.dto.LoginResponse;
+import org.example.rhcamunda.dto.auth.LoginRequest;
+import org.example.rhcamunda.dto.auth.LoginResponse;
 import org.example.rhcamunda.service.KeycloakAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

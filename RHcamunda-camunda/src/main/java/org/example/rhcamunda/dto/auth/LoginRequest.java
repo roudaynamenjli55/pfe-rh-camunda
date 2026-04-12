@@ -1,4 +1,4 @@
-package org.example.rhcamunda.dto;
+package org.example.rhcamunda.dto.auth;
 
 public class LoginRequest {
     private String username;

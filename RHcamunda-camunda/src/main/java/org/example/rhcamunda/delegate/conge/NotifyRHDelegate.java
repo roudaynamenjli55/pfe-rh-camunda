@@ -1,4 +1,4 @@
-package org.example.rhcamunda.delegate;
+package org.example.rhcamunda.delegate.conge;
 
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;

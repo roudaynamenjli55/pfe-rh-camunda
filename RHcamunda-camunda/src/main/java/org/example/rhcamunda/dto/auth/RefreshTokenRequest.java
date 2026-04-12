@@ -1,4 +1,4 @@
-package org.example.rhcamunda.dto;
+package org.example.rhcamunda.dto.auth;
 
 import lombok.Data;
 

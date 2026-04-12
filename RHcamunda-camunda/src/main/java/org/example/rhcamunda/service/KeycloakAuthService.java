@@ -1,7 +1,7 @@
 package org.example.rhcamunda.service; // ⚠️ Assure-toi que c'est bien 'service' en minuscule
 
-import org.example.rhcamunda.dto.LoginRequest;
-import org.example.rhcamunda.dto.LoginResponse;
+import org.example.rhcamunda.dto.auth.LoginRequest;
+import org.example.rhcamunda.dto.auth.LoginResponse;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;

@@ -6,9 +6,15 @@
         <camunda:property />
       </camunda:properties>
     </bpmn:extensionElements>
+
+    <!-- ✅ MODIFICATION: Ajout Execution Listener sur Start Event -->
     <bpmn:startEvent id="start-event" name="Demande de Congé">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="start" class="org.example.rhcamunda.delegate.conge.LoadEmployeeDataDelegate"/>
+      </bpmn:extensionElements>
       <bpmn:outgoing>flow-check-balance</bpmn:outgoing>
     </bpmn:startEvent>
+
     <bpmn:sequenceFlow id="flow-check-balance" name="Flow1" sourceRef="start-event" targetRef="checkLeaveBalance" />
     <bpmn:exclusiveGateway id="gateway-balance" name="Solde suffisant?">
       <bpmn:incoming>Flow_0c9kkvv</bpmn:incoming>
@@ -31,7 +37,7 @@
       <bpmn:outgoing>flow-to-gateway-approved</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:sequenceFlow id="flow-to-gateway-approved" name="Flow3" sourceRef="validateByManager" targetRef="Gateway_1c9ll1p" />
-    <bpmn:serviceTask id="updateLeaveBalance" name="Mettre à jour solde" camunda:class="org.example.rhcamunda.delegate.UpdateLeaveBalanceDelegate">
+    <bpmn:serviceTask id="updateLeaveBalance" name="Mettre à jour solde" camunda:class="org.example.rhcamunda.delegate.conge.UpdateLeaveBalanceDelegate">
       <bpmn:extensionElements />
       <bpmn:incoming>flow-update</bpmn:incoming>
       <bpmn:outgoing>flow-notify-rh</bpmn:outgoing>
@@ -39,7 +45,7 @@
     <bpmn:sequenceFlow id="flow-update" name="Oui" sourceRef="Gateway_1c9ll1p" targetRef="updateLeaveBalance">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:serviceTask id="notifyRH" name="Notifier RH" camunda:class="org.example.rhcamunda.delegate.NotifyRHDelegate">
+    <bpmn:serviceTask id="notifyRH" name="Notifier RH" camunda:class="org.example.rhcamunda.delegate.conge.NotifyRHDelegate">
       <bpmn:extensionElements />
       <bpmn:incoming>flow-notify-rh</bpmn:incoming>
       <bpmn:outgoing>flow-to-end-approved</bpmn:outgoing>
@@ -57,13 +63,14 @@
       <bpmn:incoming>flow-rejected</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="flow-rejected" name="Non" sourceRef="Gateway_1c9ll1p" targetRef="end-rejected" />
-    <bpmn:serviceTask id="checkLeaveBalance" name="Vérifier solde congés" camunda:class="org.example.rhcamunda.delegate.CheckLeaveBalanceDelegate">
+    <bpmn:serviceTask id="checkLeaveBalance" name="Vérifier solde congés" camunda:class="org.example.rhcamunda.delegate.conge.CheckLeaveBalanceDelegate">
       <bpmn:extensionElements />
       <bpmn:incoming>flow-check-balance</bpmn:incoming>
       <bpmn:outgoing>Flow_0c9kkvv</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:sequenceFlow id="Flow_0c9kkvv" sourceRef="checkLeaveBalance" targetRef="gateway-balance" />
   </bpmn:process>
+
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="conge-request-process">
       <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="start-event">

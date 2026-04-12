@@ -1,4 +1,4 @@
-package org.example.rhcamunda.dto;
+package org.example.rhcamunda.dto.conge;
 
 import lombok.*;
 import java.time.LocalDate;

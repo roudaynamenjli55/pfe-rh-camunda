@@ -30,6 +30,7 @@ public class Agence {
     private List<Employe> employes = new ArrayList<>();
 
     // --- Méthodes du Diagramme ---
+
     public void ajouter(Employe employe) {
         this.employes.add(employe);
         employe.setAgence(this);
@@ -43,7 +44,23 @@ public class Agence {
         return employes;
     }
 
+    // ✅ CORRECTION : Compter les employés ACTIFS seulement
     public Integer obtenirEffectif() {
-        return (int) employes.stream().filter(e -> !e.getArchive()).count();
+        if (employes == null) {
+            return 0;
+        }
+        return (int) employes.stream()
+                .filter(e -> e.getActif() != null && e.getActif()) // ← Actif = true
+                .count();
+    }
+
+    // 🔹 Bonus : Méthode pour compter les inactifs (si besoin)
+    public Integer obtenirEffectifInactif() {
+        if (employes == null) {
+            return 0;
+        }
+        return (int) employes.stream()
+                .filter(e -> e.getActif() == null || !e.getActif()) // ← Actif = false
+                .count();
     }
 }
