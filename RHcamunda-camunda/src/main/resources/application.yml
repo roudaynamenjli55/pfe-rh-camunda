@@ -57,10 +57,8 @@ spring:
       resourceserver:
         jwt:
           # L'URL de ton Realm Keycloak (PFEE-REALM)
-          issuer-uri: http://localhost:8080/realms/PFEE-REALM
-          # URL des clés publiques pour vérifier les tokens
-          jwk-set-uri: http://localhost:8080/realms/PFEE-REALM/protocol/openid-connect/certs
-
+          issuer-uri: http://localhost:8080/realms/rhcamunda-realm
+          jwk-set-uri: http://localhost:8080/realms/rhcamunda-realm/protocol/openid-connect/certs
 # --- Configuration des Logs ---
 logging:
   level:
