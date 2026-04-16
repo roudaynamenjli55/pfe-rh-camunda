@@ -7,10 +7,14 @@ import java.time.LocalTime;
 
 @Entity
 @Table(name = "autorisations")
-@Data @Builder @NoArgsConstructor @AllArgsConstructor
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Autorisation {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -37,6 +41,8 @@ public class Autorisation {
     @Column(length = 255)
     private String motif;
 
+    // ✅ CORRECTION: @Builder.Default doit être SUR le champ avec valeur par défaut
+    @Builder.Default
     private Boolean estPayee = false;
 
     // Process instance ID pour traçabilité Camunda

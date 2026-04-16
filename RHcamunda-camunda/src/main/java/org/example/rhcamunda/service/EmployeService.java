@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.rhcamunda.entity.Employe;
 import org.example.rhcamunda.repository.EmployeRepository;
+import org.example.rhcamunda.util.MatriculeGenerator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +21,7 @@ import java.util.List;
 public class EmployeService {
 
     private final EmployeRepository employeRepository;
+    private final MatriculeGenerator matriculeGenerator;
 
     // =================================================================
     // 🔹 CRUD : CREATE
@@ -25,12 +29,24 @@ public class EmployeService {
 
     @Transactional
     public Employe creerEmploye(Employe employe) {
-        // Vérification unicité matricule
-        if (employe.getMatricule() != null && employeRepository.existsByMatricule(employe.getMatricule())) {
-            throw new RuntimeException("Matricule déjà utilisé : " + employe.getMatricule());
+
+        // ✅ Génération automatique du matricule si non fourni
+        if (employe.getMatricule() == null || employe.getMatricule().trim().isEmpty()) {
+            String matriculeGenere = matriculeGenerator.genererMatricule();
+            employe.setMatricule(matriculeGenere);
+            log.debug("Matricule auto-généré : {}", matriculeGenere);
+        } else {
+            // Validation du format
+            if (!matriculeGenerator.estFormatValide(employe.getMatricule())) {
+                throw new IllegalArgumentException("Format de matricule invalide : " + employe.getMatricule());
+            }
+            // Vérification d'unicité
+            if (employeRepository.existsByMatricule(employe.getMatricule())) {
+                throw new RuntimeException("Matricule déjà utilisé : " + employe.getMatricule());
+            }
         }
 
-        // Initialisation contexte bancaire
+        // Initialisation des valeurs par défaut
         if (employe.getSoldeConge() == null) {
             employe.setSoldeConge(30.0);
         }
@@ -45,7 +61,8 @@ public class EmployeService {
         }
 
         Employe saved = employeRepository.save(employe);
-        log.info("✅ Employé créé : {} - {}", saved.getMatricule(), saved.getNomComplet());
+        log.info("✅ Employé créé : {} - Matricule: {}", saved.getNomComplet(), saved.getMatricule());
+
         return saved;
     }
 
@@ -60,7 +77,12 @@ public class EmployeService {
 
     @Transactional(readOnly = true)
     public List<Employe> listerEmployesParDepartement(Long departementId) {
-        return employeRepository.findByDepartementId(departementId);
+        return employeRepository.findByDepartementIdAndActifTrue(departementId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Employe> listerEmployesParAgence(Long agenceId) {
+        return employeRepository.findByAgenceIdAndActifTrue(agenceId);
     }
 
     @Transactional(readOnly = true)
@@ -99,6 +121,7 @@ public class EmployeService {
         existing.setTelephone(details.getTelephone());
         existing.setAdresse(details.getAdresse());
         existing.setDateNaissance(details.getDateNaissance());
+
         existing.setDepartement(details.getDepartement());
         existing.setPoste(details.getPoste());
         existing.setSuperieur(details.getSuperieur());
@@ -115,10 +138,26 @@ public class EmployeService {
     @Transactional
     public void archiverEmploye(Long id) {
         Employe emp = trouverParId(id);
+
+        if (!emp.getActif()) {
+            log.warn("Employé déjà archivé : {}", emp.getMatricule());
+            return;
+        }
+
         emp.setActif(false);
         emp.setDateArretChivage(java.time.LocalDateTime.now());
         employeRepository.save(emp);
+
         log.info("🗑️ Employé archivé : {}", emp.getMatricule());
+    }
+
+    @Transactional
+    public void restaurerEmploye(Long id) {
+        Employe emp = trouverParId(id);
+        emp.setActif(true);
+        emp.setDateArretChivage(null);
+        employeRepository.save(emp);
+        log.info("♻️ Employé restauré : {}", emp.getMatricule());
     }
 
     // =================================================================
@@ -126,28 +165,56 @@ public class EmployeService {
     // =================================================================
 
     @Transactional(readOnly = true)
-    public int getSoldeConges(String matricule) {
+    public Double getSoldeConges(String matricule) {
         Employe emp = trouverParMatricule(matricule);
-        return emp.getSoldeConge() != null ? emp.getSoldeConge().intValue() : 0;
+        return emp.getSoldeConge() != null ? emp.getSoldeConge() : 0.0;
     }
 
     @Transactional(readOnly = true)
-    public int getSoldeAutorisations(String matricule) {
+    public Integer getSoldeAutorisations(String matricule) {
         Employe emp = trouverParMatricule(matricule);
         return emp.getSoldeAutorisation() != null ? emp.getSoldeAutorisation() : 0;
+    }
+
+    @Transactional
+    public void debiterSoldeConge(String matricule, double jours) {
+        Employe emp = trouverParMatricule(matricule);
+        Double soldeActuel = emp.getSoldeConge() != null ? emp.getSoldeConge() : 0.0;
+
+        if (soldeActuel < jours) {
+            throw new RuntimeException("Solde de congé insuffisant. Solde: " + soldeActuel + ", Demandé: " + jours);
+        }
+
+        emp.setSoldeConge(soldeActuel - jours);
+        employeRepository.save(emp);
+        log.info("💳 Solde congé débité : {} - {} jours", matricule, jours);
+    }
+
+    @Transactional
+    public void debiterSoldeAutorisation(String matricule, int quantite) {
+        Employe emp = trouverParMatricule(matricule);
+        Integer soldeActuel = emp.getSoldeAutorisation() != null ? emp.getSoldeAutorisation() : 0;
+
+        if (soldeActuel < quantite) {
+            throw new RuntimeException("Solde d'autorisation insuffisant");
+        }
+
+        emp.setSoldeAutorisation(soldeActuel - quantite);
+        employeRepository.save(emp);
+        log.info("💳 Solde autorisation débité : {} - {}", matricule, quantite);
     }
 
     @Transactional(readOnly = true)
     public Employe trouverManagerParEmployeMatricule(String matricule) {
         Employe emp = trouverParMatricule(matricule);
-        if (emp.getSuperieur() == null) {
+        if (emp.getSuperieur() == null || !emp.getSuperieur().getActif()) {
             throw new RuntimeException("Aucun manager défini pour l'employé : " + matricule);
         }
         return emp.getSuperieur();
     }
 
     // =================================================================
-    // 🔹 STATS & COMPTAGES
+    // 🔹 STATS & COMPTAGES (Dashboard RH)
     // =================================================================
 
     @Transactional(readOnly = true)
@@ -156,14 +223,25 @@ public class EmployeService {
     }
 
     @Transactional(readOnly = true)
-    public long countByDepartement() {
-        return employeRepository.count();
+    public long countEmployesParDepartement(Long departementId) {
+        return employeRepository.countByDepartementIdAndActifTrue(departementId);
+    }
+
+    @Transactional(readOnly = true)
+    public long countEmployesParAgence(Long agenceId) {
+        return employeRepository.countByAgenceIdAndActifTrue(agenceId);
     }
 
     @Transactional(readOnly = true)
     public long countNouveauxCeMois() {
         LocalDate debutMois = LocalDate.now().withDayOfMonth(1);
-        return employeRepository.countByDateEmbaucheBetween(debutMois, LocalDate.now().plusDays(1));
+        return employeRepository.countByDateEmbaucheBetweenAndActifTrue(debutMois, LocalDate.now().plusDays(1));
+    }
+
+    @Transactional(readOnly = true)
+    public long countNouveauxCetteAnnee() {
+        LocalDate debutAnnee = LocalDate.now().withDayOfYear(1);
+        return employeRepository.countByDateEmbaucheBetweenAndActifTrue(debutAnnee, LocalDate.now().plusDays(1));
     }
 
     @Transactional(readOnly = true)
@@ -180,5 +258,41 @@ public class EmployeService {
                 .mapToInt(e -> e.getSoldeAutorisation() != null ? e.getSoldeAutorisation() : 0)
                 .average()
                 .orElse(0.0);
+    }
+
+    // =================================================================
+    // ✅ CORRECTION : Méthode countByDepartement() AJOUTÉE
+    // =================================================================
+
+    @Transactional(readOnly = true)
+    public Map<Long, Long> countByDepartement() {
+        // Retourne une Map : departementId -> nombre d'employés
+        return employeRepository.findByActifTrue().stream()
+                .collect(Collectors.groupingBy(
+                        e -> e.getDepartement() != null ? e.getDepartement().getId() : 0L,
+                        Collectors.counting()
+                ));
+    }
+
+    // =================================================================
+    // 🔹 EXPORT
+    // =================================================================
+
+    @Transactional(readOnly = true)
+    public List<Employe> exporterEmployesPourRapport() {
+        return employeRepository.findByActifTrue().stream()
+                .map(emp -> {
+                    Employe export = new Employe();
+                    export.setMatricule(emp.getMatricule());
+                    export.setNom(emp.getNom());
+                    export.setPrenom(emp.getPrenom());
+                    export.setEmail(emp.getEmail());
+                    export.setPoste(emp.getPoste());
+                    export.setDepartement(emp.getDepartement());
+                    export.setDateEmbauche(emp.getDateEmbauche());
+                    export.setSoldeConge(emp.getSoldeConge());
+                    return export;
+                })
+                .toList();
     }
 }

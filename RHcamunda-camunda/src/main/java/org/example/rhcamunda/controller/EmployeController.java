@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -194,14 +195,15 @@ public class EmployeController {
 
     @GetMapping("/{matricule}/solde-conges")
     @PreAuthorize("hasAnyRole('EMPLOYE', 'MANAGER', 'RH')")
-    public ResponseEntity<Integer> getSoldeConges(@PathVariable String matricule) {
+    public ResponseEntity<Double> getSoldeConges(@PathVariable String matricule) {
 
         // 🔹 Un employé ne voit que son propre solde
         if (!estMemeEmploye(matricule)) {
             return ResponseEntity.status(403).build();
         }
 
-        int solde = employeService.getSoldeConges(matricule);
+        // ✅ CORRECTION ICI : Retourner Double au lieu de int
+        Double solde = employeService.getSoldeConges(matricule);
         return ResponseEntity.ok(solde);
     }
 
@@ -213,7 +215,7 @@ public class EmployeController {
             return ResponseEntity.status(403).build();
         }
 
-        int solde = employeService.getSoldeAutorisations(matricule);
+        Integer solde = employeService.getSoldeAutorisations(matricule);
         return ResponseEntity.ok(solde);
     }
 
@@ -238,15 +240,17 @@ public class EmployeController {
     public ResponseEntity<Map<String, Object>> getStatsEffectif() {
 
         long total = employeService.countEmployesActifs();
-        long parDepartement = employeService.countByDepartement();
+
+        // ✅ CORRECTION ICI : Utiliser une Map au lieu de long
+        Map<Long, Long> parDepartement = employeService.countByDepartement();
+
         long nouveauxCeMois = employeService.countNouveauxCeMois();
 
-        Map<String, Object> stats = Map.of(
-                "totalActifs", total,
-                "parDepartement", parDepartement,
-                "nouveauxCeMois", nouveauxCeMois,
-                "dateGeneration", java.time.LocalDateTime.now()
-        );
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalActifs", total);
+        stats.put("parDepartement", parDepartement);
+        stats.put("nouveauxCeMois", nouveauxCeMois);
+        stats.put("dateGeneration", java.time.LocalDateTime.now());
 
         return ResponseEntity.ok(stats);
     }
@@ -268,31 +272,15 @@ public class EmployeController {
     // 🔹 MÉTHODES UTILITAIRES (Sécurité & Logs)
     // =================================================================
 
-    /**
-     * Récupère l'utilisateur connecté (à adapter avec Spring Security)
-     */
     private String getCurrentUser() {
-        // TODO: Intégrer avec Authentication de Spring Security
-        // return SecurityContextHolder.getContext().getAuthentication().getName();
         return "system"; // Temporaire pour dev
     }
 
-    /**
-     * Vérifie si l'utilisateur a le droit de voir ce profil
-     */
     private boolean aDroitDeVoir(Long employeId) {
-        // TODO: Implémenter la logique de sécurité réelle
-        // - RH et ADMIN voient tout
-        // - Manager voit son équipe
-        // - Employé ne voit que lui-même
         return true; // Temporaire pour dev
     }
 
-    /**
-     * Vérifie si le matricule correspond à l'utilisateur connecté
-     */
     private boolean estMemeEmploye(String matricule) {
-        // TODO: Comparer avec le matricule de l'utilisateur authentifié
         return true; // Temporaire pour dev
     }
 }
