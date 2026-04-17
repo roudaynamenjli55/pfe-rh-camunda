@@ -2,38 +2,58 @@ package org.example.rhcamunda.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @Entity
 @Table(name = "campagnes_evaluation")
-@Data @Builder @NoArgsConstructor @AllArgsConstructor
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CampagneEvaluation {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, unique = true)
     private String nom;
 
-    private Integer annee;
-
-    private LocalDate dateDebut;
-    private LocalDate dateFin;
-
-    @Column(length = 255)
     private String description;
 
-    @Column(length = 50)
-    private String statut;
+    @Column(nullable = false)
+    private LocalDate dateDebut;
 
-    public void creer() {}
-    public void demarrer() {}
-    public void clôturer() {}
-    public List<Evaluation> obtenirEvaluations() { return List.of(); }
-    public void obtenirStatistiques() {}
-    public void exporterStatistiques() {}
-    public Map<String, Object> obtenirStatistiquesParScore() { return Map.of(); }
+    @Column(nullable = false)
+    private LocalDate dateFin;
+
+    // ✅ CHANGÉ : Integer → Long
+    @Column(nullable = false)
+    private Long annee;
+
+    @Column(length = 50)
+    private String statut; // ACTIVE, CLOTUREE, ANNULEE
+
+    @CreationTimestamp
+    private java.time.LocalDateTime dateCreation;
+
+    // Relations
+    @OneToMany(mappedBy = "campagne", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Evaluation> evaluations;
+
+    // Méthodes utilitaires
+    public boolean estActive() {
+        return "ACTIVE".equals(this.statut);
+    }
+
+    public boolean estCloturee() {
+        return "CLOTUREE".equals(this.statut);
+    }
+
+    public boolean estDansPeriode(LocalDate date) {
+        return !date.isBefore(dateDebut) && !date.isAfter(dateFin);
+    }
 }

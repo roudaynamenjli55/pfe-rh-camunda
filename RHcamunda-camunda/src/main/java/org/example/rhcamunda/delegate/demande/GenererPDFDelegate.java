@@ -20,25 +20,53 @@ public class GenererPDFDelegate implements JavaDelegate {
     @Override
     public void execute(DelegateExecution execution) {
         try {
-            Long demandeId = (Long) execution.getVariable("demandeId");
+            // 1️⃣ Récupération sécurisée de demandeId
+            Object demandeIdObj = execution.getVariable("demandeId");
+
+            if (demandeIdObj == null) {
+                log.error("❌ Variable 'demandeId' non trouvée. Variables: {}", execution.getVariableNames());
+                throw new IllegalStateException("Variable 'demandeId' manquante");
+            }
+
+            Long demandeId;
+            if (demandeIdObj instanceof Number) {
+                demandeId = ((Number) demandeIdObj).longValue();
+            } else if (demandeIdObj instanceof String) {
+                demandeId = Long.valueOf((String) demandeIdObj);
+            } else {
+                throw new IllegalArgumentException("Type invalide pour demandeId: " + demandeIdObj.getClass());
+            }
+
+            log.info("🔍 Chargement demande ID: {}", demandeId);
+
+            // 2️⃣ Chargement de la demande
             Demande demande = demandeRepository.findById(demandeId)
-                    .orElseThrow(() -> new RuntimeException("Demande non trouvée"));
+                    .orElseThrow(() -> {
+                        log.error("❌ Demande non trouvée: {}", demandeId);
+                        return new RuntimeException("Demande non trouvée: " + demandeId);
+                    });
 
-            // Générer le PDF
+            // 3️⃣ Génération PDF
             String cheminPdf = pdfService.genererPDF(demande);
+            log.info("📄 PDF généré: {}", cheminPdf);
 
-            // Mettre à jour la demande
+            // 4️⃣ Mise à jour
             demande.setCheminPdf(cheminPdf);
             demande.setStatut("VALIDEE");
             demandeRepository.save(demande);
 
+            // 5️⃣ Variables de sortie
             execution.setVariable("cheminPdf", cheminPdf);
+            execution.setVariable("pdfGenere", true);
 
-            log.info("✅ PDF généré avec succès: {}", cheminPdf);
+            log.info("✅ Succès pour demande {}", demandeId);
 
+        } catch (RuntimeException e) {
+            log.error("❌ Erreur métier", e);
+            throw e;
         } catch (Exception e) {
-            log.error("❌ Erreur génération PDF", e);
-            throw new RuntimeException("Erreur lors de la génération du PDF", e);
+            log.error("❌ Erreur technique", e);
+            throw new RuntimeException("Erreur delegate: " + e.getMessage(), e);
         }
     }
 }

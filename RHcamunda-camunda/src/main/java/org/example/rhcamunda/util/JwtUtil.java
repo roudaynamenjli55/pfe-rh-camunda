@@ -7,13 +7,11 @@ import org.example.rhcamunda.repository.EmployeRepository;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Utilitaire pour gérer l'extraction des informations depuis le Token JWT (Keycloak).
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -21,79 +19,95 @@ public class JwtUtil {
 
     private final EmployeRepository employeRepository;
 
-    /**
-     * Extrait le matricule de l'employé connecté depuis le JWT.
-     * Essaie plusieurs champs possibles pour maximiser la compatibilité.
-     *
-     * @param jwt Le token JWT
-     * @return Le matricule de l'employé
-     */
     public String extractMatricule(Jwt jwt) {
+        // Validation date d'expiration
+        if (jwt.getExpiresAt() != null && jwt.getExpiresAt().isBefore(Instant.now())) {
+            log.error("Token JWT expiré pour: {}", jwt.getSubject());
+            throw new IllegalStateException("Token expiré");
+        }
+
         String matricule = extractMatriculeFromJwt(jwt);
 
         if (matricule != null) {
             log.debug("Matricule extrait du token: {}", matricule);
-            // On vérifie que l'employé existe bien en base
-            final String finalMatricule = matricule; // ✅ Variable finale pour le lambda
-            employeRepository.findByMatricule(finalMatricule)
-                    .orElseThrow(() -> new RuntimeException(
-                            "Employé non trouvé avec matricule: " + finalMatricule +
-                                    ". Vérifiez que l'utilisateur existe dans la table 'employes'."
-                    ));
+
+            // Validation employé existe
+            Employe employe = employeRepository.findByMatricule(matricule)
+                    .orElseThrow(() -> {
+                        log.error("Employé non trouvé: {}", matricule);
+                        return new RuntimeException("Employé non trouvé: " + matricule);
+                    });
+
+            // ✅ Suppression de la vérification getDateDepart() qui n'existe pas
+            // Si tu veux vérifier si l'employé est actif, utilise un autre champ
+            // Par exemple: if (employe.getArchive() != null && employe.getArchive())
         }
 
         return matricule;
     }
 
-    /**
-     * Méthode helper pour extraire le matricule du JWT
-     */
     private String extractMatriculeFromJwt(Jwt jwt) {
-        // Priorité 1: Chercher claim "matricule" (custom claim)
+        // Priorité 1: Claim custom "matricule"
         String matricule = jwt.getClaimAsString("matricule");
 
-        // Priorité 2: Chercher dans "employeeId"
+        // Priorité 2: employeeId
         if (matricule == null) {
             matricule = jwt.getClaimAsString("employeeId");
         }
 
-        // Priorité 3: Fallback sur "preferred_username" (souvent utilisé par Keycloak par défaut)
+        // Priorité 3: preferred_username (Keycloak default)
         if (matricule == null) {
             matricule = jwt.getClaimAsString("preferred_username");
+        }
+
+        // Validation format matricule (bancaire)
+        if (matricule != null && !matricule.matches("^[A-Z0-9]{6,12}$")) {
+            log.warn("Format matricule suspect: {}", matricule);
         }
 
         return matricule;
     }
 
-    /**
-     * Extrait la liste des rôles du Realm Keycloak.
-     *
-     * @param jwt Le token JWT
-     * @return Liste des rôles
-     */
     public List<String> extractRoles(Jwt jwt) {
         try {
             Map<String, Object> realmAccess = jwt.getClaim("realm_access");
             if (realmAccess != null && realmAccess.containsKey("roles")) {
+                @SuppressWarnings("unchecked")
                 List<String> roles = (List<String>) realmAccess.get("roles");
                 log.debug("Rôles extraits: {}", roles);
                 return roles;
             }
         } catch (Exception e) {
-            log.warn("Erreur lors de l'extraction des rôles: {}", e.getMessage());
+            log.error("Erreur extraction rôles: {}", e.getMessage(), e);
         }
         return Collections.emptyList();
     }
 
-    /**
-     * Vérifie si l'utilisateur possède un rôle spécifique.
-     *
-     * @param jwt Le token JWT
-     * @param roleName Le nom du rôle à vérifier (ex: "RH", "MANAGER")
-     * @return true si l'utilisateur a le rôle
-     */
     public boolean hasRole(Jwt jwt, String roleName) {
-        List<String> roles = extractRoles(jwt);
-        return roles.contains(roleName);
+        return extractRoles(jwt).contains(roleName);
+    }
+
+    public boolean hasAnyRole(Jwt jwt, String... roles) {
+        List<String> userRoles = extractRoles(jwt);
+        for (String role : roles) {
+            if (userRoles.contains(role)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String extractEmail(Jwt jwt) {
+        return jwt.getClaimAsString("email");
+    }
+
+    public String extractNomComplet(Jwt jwt) {
+        String givenName = jwt.getClaimAsString("given_name");
+        String familyName = jwt.getClaimAsString("family_name");
+
+        if (givenName != null && familyName != null) {
+            return givenName + " " + familyName;
+        }
+        return jwt.getClaimAsString("name");
     }
 }

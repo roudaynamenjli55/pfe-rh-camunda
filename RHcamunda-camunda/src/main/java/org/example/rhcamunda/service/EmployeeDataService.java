@@ -54,11 +54,11 @@ public class EmployeeDataService {
             runtimeService.setVariable(executionId, "agenceNom", employe.getAgence().getNom());
         }
 
-        if (employe.getSuperieur() != null) {
-            runtimeService.setVariable(executionId, "superieurId", employe.getSuperieur().getId());
-            runtimeService.setVariable(executionId, "superieurNom", employe.getSuperieur().getFullName());
-            runtimeService.setVariable(executionId, "superieurEmail", employe.getSuperieur().getEmail());
-            runtimeService.setVariable(executionId, "superieurMatricule", employe.getSuperieur().getMatricule());
+        if (employe.getChefHierarchique() != null) {
+            runtimeService.setVariable(executionId, "superieurId", employe.getChefHierarchique().getId());
+            runtimeService.setVariable(executionId, "superieurNom", employe.getChefHierarchique().getFullName());
+            runtimeService.setVariable(executionId, "superieurEmail", employe.getChefHierarchique().getEmail());
+            runtimeService.setVariable(executionId, "superieurMatricule", employe.getChefHierarchique().getMatricule());
         }
 
         // ✅ CORRECTION: getActif() au lieu de getArchive() + nom de variable cohérent

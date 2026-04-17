@@ -57,7 +57,7 @@ public class DemandeController {
             // ✅ Créer la demande en base
             Demande demande = Demande.builder()
                     .employe(employe)
-                    .chefHierarchique(employe.getSuperieur())
+                    .chefHierarchique(employe.getChefHierarchique())
                     .motif(request.getMotif())
                     .statut("EN_ATTENTE")
                     .dateCreation(LocalDate.now())

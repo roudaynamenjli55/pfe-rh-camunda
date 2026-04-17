@@ -12,7 +12,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher; // ✅ IMPORTANT
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -44,11 +44,14 @@ public class SecurityConfig {
                 // ==================== HEADERS ====================
                 .headers(headers -> headers
                         .frameOptions(frame -> frame.disable())
+                        .xssProtection(xss -> xss.disable())
+                        .contentTypeOptions(contentType -> contentType.disable())
+                        .cacheControl(cache -> cache.disable())
                 )
 
                 // ==================== AUTHORIZATION ====================
                 .authorizeHttpRequests(auth -> auth
-                        // ✅ TOUS AVEC AntPathRequestMatcher EXPLICITE
+                        // ✅ ENDPOINTS PUBLICS
                         .requestMatchers(new AntPathRequestMatcher("/api/auth/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/camunda/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/test/public")).permitAll()
@@ -60,21 +63,21 @@ public class SecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
 
-                        // 🎭 CAMUNDA - TOUS AVEC AntPathRequestMatcher
+                        // 🎭 CAMUNDA
                         .requestMatchers(new AntPathRequestMatcher("/camunda/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/engine-rest/**")).permitAll()
 
-                        // 🔐 ENDPOINTS PROTÉGÉS
+                        // 🔐 ENDPOINTS PROTÉGÉS PAR RÔLE
                         .requestMatchers(new AntPathRequestMatcher("/api/admin/**")).hasRole("ADMIN")
                         .requestMatchers(new AntPathRequestMatcher("/api/rh/**")).hasAnyRole("RH", "ADMIN")
                         .requestMatchers(new AntPathRequestMatcher("/api/chef/**")).hasAnyRole("CHEF_HIERARCHIQUE", "RH", "ADMIN")
                         .requestMatchers(new AntPathRequestMatcher("/api/employe/**")).hasAnyRole("EMPLOYE", "CHEF_HIERARCHIQUE", "RH", "ADMIN")
 
-                        // 🔒 TOUT LE RESTE
+                        // 🔒 TOUT LE RESTE AUTHENTIFIÉ
                         .anyRequest().authenticated()
                 )
 
-                // ==================== OAUTH2 ====================
+                // ==================== OAUTH2 RESOURCE SERVER ====================
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())
@@ -84,27 +87,31 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ==================== CORS ====================
+    // ==================== CORS CONFIGURATION ====================
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+
+        // Origins autorisés (en prod: mettre les vrais domaines)
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:4200",
                 "http://localhost:8081",
                 "http://127.0.0.1:4200",
                 "http://127.0.0.1:8081"
         ));
+
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setExposedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setMaxAge(3600L); // 1 heure
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 
-    // ==================== JWT CONVERTER ====================
+    // ==================== JWT AUTHENTICATION CONVERTER ====================
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
@@ -112,7 +119,7 @@ public class SecurityConfig {
         return converter;
     }
 
-    // ==================== ROLE CONVERTER ====================
+    // ==================== KEYCLOAK ROLE CONVERTER ====================
     @SuppressWarnings("unchecked")
     static class KeycloakRealmRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
         @Override

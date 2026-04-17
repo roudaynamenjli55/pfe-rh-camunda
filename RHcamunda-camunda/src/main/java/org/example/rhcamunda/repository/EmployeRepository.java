@@ -83,13 +83,13 @@ public interface EmployeRepository extends JpaRepository<Employe, Long> {
         """)
     List<Employe> findByAgenceAndActif(@Param("agenceId") Long agenceId);
 
-    // 🔹 Recherche par hiérarchie (employés sous un manager)
+    // 🔹 Recherche par hiérarchie (employés sous un manager) - ✅ CORRIGÉ
     @Query("""
         SELECT e FROM Employe e 
         WHERE e.actif = true 
-        AND e.superieur.id = :managerId
+        AND e.chefHierarchique.id = :managerId
         """)
-    List<Employe> findBySuperieurIdAndActifTrue(@Param("managerId") Long managerId);
+    List<Employe> findByChefHierarchiqueIdAndActifTrue(@Param("managerId") Long managerId);
 
     // =================================================================
     // 🔹 PAGINATION AVANCÉE

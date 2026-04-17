@@ -38,19 +38,15 @@ public class Employe {
     private String telephone;
 
     private LocalDate dateNaissance;
-
-    // 🔧 CHANGÉ : LocalDate au lieu de LocalDateTime
     private LocalDate dateEmbauche;
-
     private String adresse;
 
     @Builder.Default
     private Double soldeConge = 30.0;
 
     @Builder.Default
-    private Integer soldeAutorisation = 12; // 2/mois × 6 mois
+    private Integer soldeAutorisation = 12;
 
-    // 🔧 CHANGÉ : "actif" au lieu de "archive" (plus clair)
     @Builder.Default
     private Boolean actif = true;
 
@@ -66,9 +62,10 @@ public class Employe {
     @JoinColumn(name = "poste_id")
     private Poste poste;
 
+    // ✅ CORRECTION RADICALE : superieur → chefHierarchique
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "superieur_id")
-    private Employe superieur;
+    @JoinColumn(name = "chef_hierarchique_id")  // ← Nom colonne BDD
+    private Employe chefHierarchique;            // ← Nom champ Java
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "agence_id")
@@ -104,9 +101,8 @@ public class Employe {
         return prenom + " " + nom;
     }
 
-    // ✅ AJOUTÉ : Méthode getNomComplet() pour compatibilité
     public String getNomComplet() {
-        return getFullName(); // ou: return prenom + " " + nom;
+        return getFullName();
     }
 
     public boolean hasSoldeSuffisant(int jours) {
@@ -125,8 +121,9 @@ public class Employe {
         this.agence = agence;
     }
 
+    // ✅ CORRECTION : utilise chefHierarchique
     public void definirChef(Employe chef) {
-        this.superieur = chef;
+        this.chefHierarchique = chef;
     }
 
     public Double consulterSolde() {

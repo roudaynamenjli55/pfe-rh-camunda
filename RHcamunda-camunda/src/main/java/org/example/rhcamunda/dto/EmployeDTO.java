@@ -94,8 +94,8 @@ public class EmployeDTO {
                 .departementNom(e.getDepartement() != null ? e.getDepartement().getNom() : null)
                 .posteId(e.getPoste() != null ? e.getPoste().getId() : null)
                 .posteTitre(e.getPoste() != null ? e.getPoste().getDescription() : null)
-                .superieurId(e.getSuperieur() != null ? e.getSuperieur().getId() : null)
-                .superieurNom(e.getSuperieur() != null ? e.getSuperieur().getFullName() : null)
+                .superieurId(e.getChefHierarchique() != null ? e.getChefHierarchique().getId() : null)
+                .superieurNom(e.getChefHierarchique() != null ? e.getChefHierarchique().getFullName() : null)
                 .agenceId(e.getAgence() != null ? e.getAgence().getId() : null)
                 .agenceNom(e.getAgence() != null ? e.getAgence().getNom() : null)
                 .build();

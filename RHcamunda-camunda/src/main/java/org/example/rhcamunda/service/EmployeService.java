@@ -124,7 +124,7 @@ public class EmployeService {
 
         existing.setDepartement(details.getDepartement());
         existing.setPoste(details.getPoste());
-        existing.setSuperieur(details.getSuperieur());
+        existing.setChefHierarchique(details.getChefHierarchique());
         existing.setAgence(details.getAgence());
 
         log.info("✏️ Employé mis à jour : {}", existing.getMatricule());
@@ -207,10 +207,10 @@ public class EmployeService {
     @Transactional(readOnly = true)
     public Employe trouverManagerParEmployeMatricule(String matricule) {
         Employe emp = trouverParMatricule(matricule);
-        if (emp.getSuperieur() == null || !emp.getSuperieur().getActif()) {
+        if (emp.getChefHierarchique() == null || !emp.getChefHierarchique().getActif()) {
             throw new RuntimeException("Aucun manager défini pour l'employé : " + matricule);
         }
-        return emp.getSuperieur();
+        return emp.getChefHierarchique();
     }
 
     // =================================================================

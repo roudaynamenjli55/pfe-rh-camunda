@@ -25,8 +25,8 @@ public class RecupererManagerDelegate implements JavaDelegate {
             employeRepository.findByMatricule(matriculeEmploye)
                     .ifPresent(employe -> {
                         // Récupérer le manager (superieur hiérarchique)
-                        if (employe.getSuperieur() != null) {
-                            String managerMatricule = employe.getSuperieur().getMatricule();
+                        if (employe.getChefHierarchique() != null) {
+                            String managerMatricule = employe.getChefHierarchique().getMatricule();
                             execution.setVariable("managerId", managerMatricule);
                             log.info("✅ Manager trouvé: {} pour l'employé {}",
                                     managerMatricule, matriculeEmploye);
