@@ -24,7 +24,7 @@ public interface AutorisationRepository extends JpaRepository<Autorisation, Long
     @Query("SELECT COUNT(a) FROM Autorisation a " +
             "WHERE a.employe.id = :employeId " +
             "AND a.type = :type " +
-            "AND FUNCTION('DATE_TRUNC', 'month', a.date) = :mois")
+            "AND YEAR(a.date) = YEAR(:mois) AND MONTH(a.date) = MONTH(:mois)")
     long countByEmployeIdAndTypeAndMonth(@Param("employeId") Long employeId,
                                          @Param("type") String type,
                                          @Param("mois") LocalDate mois);
@@ -96,7 +96,7 @@ public interface AutorisationRepository extends JpaRepository<Autorisation, Long
 
     @Query("SELECT COUNT(a) FROM Autorisation a " +
             "WHERE a.employe.departement.id = :departementId " +
-            "AND FUNCTION('DATE_TRUNC', 'month', a.date) = :mois")
+            "AND YEAR(a.date) = YEAR(:mois) AND MONTH(a.date) = MONTH(:mois)")
     long countByDepartementAndMonth(@Param("departementId") Long departementId,
                                     @Param("mois") LocalDate mois);
 
@@ -106,7 +106,7 @@ public interface AutorisationRepository extends JpaRepository<Autorisation, Long
     @Query("SELECT a.type, COUNT(a) FROM Autorisation a " +
             "WHERE a.employe.departement.id = :departementId " +
             "AND a.statut = 'VALIDE' " +
-            "AND FUNCTION('DATE_TRUNC', 'month', a.date) = :mois " +
+            "AND YEAR(a.date) = YEAR(:mois) AND MONTH(a.date) = MONTH(:mois) " +
             "GROUP BY a.type")
     List<Object[]> countByTypeAndDepartementAndMonth(@Param("departementId") Long departementId,
                                                      @Param("mois") LocalDate mois);
@@ -117,7 +117,7 @@ public interface AutorisationRepository extends JpaRepository<Autorisation, Long
 
     @Query("SELECT a FROM Autorisation a " +
             "WHERE a.statut = 'VALIDEE' " +
-            "AND FUNCTION('DATE_TRUNC', 'month', a.date) = :mois " +
+            "AND YEAR(a.date) = YEAR(:mois) AND MONTH(a.date) = MONTH(:mois) " +
             "ORDER BY a.date DESC")
     List<Autorisation> findValidatedByMonth(@Param("mois") LocalDate mois);
 
@@ -161,7 +161,7 @@ public interface AutorisationRepository extends JpaRepository<Autorisation, Long
             "WHERE a.employe.matricule = :matricule " +
             "AND a.type = :type " +
             "AND a.statut IN ('VALIDEE', 'EN_ATTENTE') " +
-            "AND FUNCTION('DATE_TRUNC', 'month', a.date) = FUNCTION('DATE_TRUNC', 'month', :dateReference)")
+            "AND YEAR(a.date) = YEAR(:dateReference) AND MONTH(a.date) = MONTH(:dateReference)")
     long countQuotaByMatriculeAndTypeAndMonth(@Param("matricule") String matricule,
                                               @Param("type") String type,
                                               @Param("dateReference") LocalDate dateReference);

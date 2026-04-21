@@ -29,7 +29,7 @@ public class LogAction {
     private Long id;
 
     // ✅ Matricule récupéré dynamiquement depuis JWT
-    @Column(nullable = false, length = 50)
+    @Column(name = "utilisateur_matricule", nullable = false, length = 50)
     private String utilisateurMatricule;
 
     @Column(nullable = false, length = 100)

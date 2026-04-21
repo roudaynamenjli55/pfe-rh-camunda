@@ -22,12 +22,6 @@ public interface CongeRepository extends JpaRepository<Conge, Long> {
 
     List<Conge> findByEmployeIdAndStatut(Long employeId, String statut);
 
-    List<Conge> findByEmployeId(Long employeId);
-
-    List<Conge> findByEmployeIdAndStatut(Long employeId, String statut);
-
-    List<Conge> findByStatutAndEmployeId(String statut, Long employeId);
-
     @Query("SELECT c FROM Conge c WHERE c.employe.id = :employeId AND c.dateDebut BETWEEN :debut AND :fin")
     List<Conge> findByEmployeIdAndDateBetween(@Param("employeId") Long employeId,
                                               @Param("debut") LocalDate debut,

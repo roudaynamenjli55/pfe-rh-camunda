@@ -51,7 +51,7 @@ public class CongeService {
         // Vérification solde
         if (employe.getSoldeConge() < nbjours) {
             throw new RuntimeException(
-                    String.format("Solde insuffisant. Disponible: %d, Demandé: %d",
+                    String.format("Solde insuffisant. Disponible: %.1f, Demandé: %d",
                             employe.getSoldeConge(), nbjours)
             );
         }

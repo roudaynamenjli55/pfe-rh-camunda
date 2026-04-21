@@ -26,7 +26,7 @@ public class Demande {
 
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
-    private LocalDate dateCreation;
+    private LocalDateTime dateCreation;
 
     @Column(length = 50, nullable = false)
     @Builder.Default
@@ -55,7 +55,7 @@ public class Demande {
 
     public void soumettre() {
         this.statut = "EN_ATTENTE";
-        this.dateCreation = LocalDate.now();
+        this.dateCreation = LocalDateTime.now();
     }
 
     public void verifier() {

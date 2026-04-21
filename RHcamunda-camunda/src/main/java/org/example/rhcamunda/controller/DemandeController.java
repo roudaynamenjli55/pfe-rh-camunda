@@ -60,7 +60,7 @@ public class DemandeController {
                     .chefHierarchique(employe.getChefHierarchique())
                     .motif(request.getMotif())
                     .statut("EN_ATTENTE")
-                    .dateCreation(LocalDate.now())
+                    .dateCreation(LocalDateTime.now())
                     .build();
 
             demande = demandeRepository.save(demande);

@@ -131,14 +131,14 @@ public class Employe {
     }
 
     public Map<String, Object> getInfosPersonnelles() {
-        return Map.of(
-                "matricule", this.matricule,
-                "nom", this.nom,
-                "prenom", this.prenom,
-                "email", this.email,
-                "telephone", this.telephone,
-                "dateNaissance", this.dateNaissance,
-                "adresse", this.adresse
-        );
+        Map<String, Object> infos = new java.util.HashMap<>();
+        infos.put("matricule", this.matricule);
+        infos.put("nom", this.nom);
+        infos.put("prenom", this.prenom);
+        infos.put("email", this.email);
+        infos.put("telephone", this.telephone);
+        infos.put("dateNaissance", this.dateNaissance);
+        infos.put("adresse", this.adresse);
+        return infos;
     }
 }

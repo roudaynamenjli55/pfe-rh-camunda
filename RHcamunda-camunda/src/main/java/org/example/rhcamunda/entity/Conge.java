@@ -31,7 +31,7 @@ public class Conge {
     @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(unique = true, nullable = false, length = 100)
+    @Column(name = "process_instance_id", unique = true, nullable = false, length = 100)
     private String processInstanceId; // Lien Camunda
 
     // ========================================================================
@@ -43,12 +43,12 @@ public class Conge {
     @Size(max = 50, message = "Le type de congé ne peut pas dépasser 50 caractères")
     private String typeConge; // repos, maladie, mariage, deuil...
 
-    @Column(nullable = false)
+    @Column(name = "date_debut", nullable = false)
     @NotNull(message = "La date de début est requise")
     @PastOrPresent(message = "La date de début ne peut pas être dans le futur lointain")
     private LocalDate dateDebut;
 
-    @Column(nullable = false)
+    @Column(name = "date_fin", nullable = false)
     @NotNull(message = "La date de fin est requise")
     @AssertTrue(message = "La date de fin doit être après la date de début")
     private LocalDate dateFin;
