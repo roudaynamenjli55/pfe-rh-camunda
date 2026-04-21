@@ -5,51 +5,113 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
-@Table(name = "log_actions")
-@Data @Builder @NoArgsConstructor @AllArgsConstructor
+@Table(
+        name = "log_actions",
+        indexes = {
+                @Index(name = "idx_log_utilisateur", columnList = "utilisateur_matricule"),
+                @Index(name = "idx_log_action", columnList = "action"),
+                @Index(name = "idx_log_entite", columnList = "entite"),
+                @Index(name = "idx_log_timestamp", columnList = "timestamp")
+        }
+)
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class LogAction {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "utilisateur_id")
-    private Utilisateur utilisateur;
+    // ✅ Matricule récupéré dynamiquement depuis JWT
+    @Column(nullable = false, length = 50)
+    private String utilisateurMatricule;
 
     @Column(nullable = false, length = 100)
-    private String action;
+    private String utilisateurNom;
 
-    @Column(nullable = false)
-    private LocalDateTime dateAction;
+    // Type d'action
+    @Column(nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    private ActionType action;
 
-    @Column(length = 255)
-    private String details;
+    // Entité concernée
+    @Column(nullable = false, length = 100)
+    private String entite;
 
-    @Column(length = 50)
-    private String adresseIP;
+    private Long entiteId;
 
-    @Column(length = 255)
-    private String ancienneValeur;
+    // Détails de l'action
+    @Column(columnDefinition = "TEXT")
+    private String ancienValeur;
 
-    @Column(length = 255)
+    @Column(columnDefinition = "TEXT")
     private String nouvelleValeur;
 
-    public void enregistrer() {
-        // Logique d'enregistrement
+    @Column(columnDefinition = "TEXT")
+    private String details;
+
+    // Informations techniques
+    @Column(length = 45)
+    private String ipAddress;
+
+    @Column(length = 255)
+    private String userAgent;
+
+    @Column(length = 100)
+    private String endpoint;
+
+    @Column(length = 20)
+    private String httpMethod;
+
+    // Timestamp
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime timestamp;
+
+    // Statut
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean success = true;
+
+    private String errorMessage;
+
+    // Enum pour les types d'actions
+    public enum ActionType {
+        CREATE,
+        UPDATE,
+        DELETE,
+        READ,
+        LOGIN,
+        LOGOUT,
+        APPROVE,
+        REJECT,
+        CANCEL,
+        EXPORT,
+        IMPORT,
+        WORKFLOW_START,
+        WORKFLOW_COMPLETE,
+        OTHER
     }
 
-    public List<LogAction> obtenirHistoriquePeriode(LocalDateTime debut, LocalDateTime fin) {
-        return List.of();
+    // Méthodes utilitaires
+    public void markSuccess() {
+        this.success = true;
     }
 
-    public void exporterRapport(LocalDateTime debut, LocalDateTime fin) {
-        // Export logic
+    public void markFailure(String error) {
+        this.success = false;
+        this.errorMessage = error;
     }
 
-    public List<LogAction> obtenirHistoriqueUtilisateur(Utilisateur utilisateur) {
-        return List.of();
+    public boolean isCriticalAction() {
+        return action == ActionType.DELETE ||
+                action == ActionType.LOGIN ||
+                action == ActionType.LOGOUT;
     }
 }

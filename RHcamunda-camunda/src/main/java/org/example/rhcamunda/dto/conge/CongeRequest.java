@@ -4,30 +4,29 @@ import lombok.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 
-@Data @Builder @NoArgsConstructor @AllArgsConstructor
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CongeRequest {
 
-    @NotBlank(message = "Matricule employé est requis")
-    private String employeeId;
-
     @NotBlank(message = "Type de congé est requis")
-    private String leaveType; // repos, maladie, mariage, deuil...
+    private String typeConge;
 
     @NotNull(message = "Date de début est requise")
-    @FutureOrPresent(message = "La date de début doit être dans le futur")
-    private LocalDate startDate;
+    @FutureOrPresent(message = "La date de début doit être aujourd'hui ou dans le futur")
+    private LocalDate dateDebut;
 
     @NotNull(message = "Date de fin est requise")
-    @FutureOrPresent(message = "La date de fin doit être dans le futur")
-    private LocalDate endDate;
+    @FutureOrPresent(message = "La date de fin doit être aujourd'hui ou dans le futur")
+    private LocalDate dateFin;
 
     @NotBlank(message = "Motif est requis")
     @Size(min = 10, message = "Le motif doit contenir au moins 10 caractères")
-    private String reason;
+    private String motif;
 
-    @Min(value = 1, message = "Durée doit être au moins 1 jour")
-    private Integer requestedDays;
+    private String remplacantId;
 
-    private String remplacantId; // Matricule du remplaçant
+    @Builder.Default
     private Boolean pieceJointe = false;
 }

@@ -1,8 +1,6 @@
-package org.example.rhcamunda.security;
+package org.example.rhcamunda.util;
 
-import org.example.rhcamunda.util.JwtUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -11,17 +9,16 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
+@Slf4j
 public class UserContext {
-
-    private static final Logger logger = LoggerFactory.getLogger(UserContext.class);
 
     private static final ThreadLocal<String> currentUserMatricule = new ThreadLocal<>();
 
     /**
-     * Récupère le matricule depuis le contexte de sécurité Keycloak
+     * Récupère le matricule depuis le contexte de sécurité
      */
-    public static String getMatriculeCourant() {
-        // Vérifier ThreadLocal d'abord (pour Camunda)
+    public String getCurrentUserMatricule() {
+        // Vérifier ThreadLocal d'abord (pour Camunda/Async)
         String matricule = currentUserMatricule.get();
         if (matricule != null) {
             return matricule;
@@ -32,7 +29,7 @@ public class UserContext {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
             if (authentication == null || !authentication.isAuthenticated()) {
-                logger.warn("Tentative d'accès sans authentification");
+                log.warn("Tentative d'accès sans authentification");
                 throw new IllegalStateException("Utilisateur non authentifié");
             }
 
@@ -46,18 +43,18 @@ public class UserContext {
                 }
 
                 if (matricule == null || matricule.trim().isEmpty()) {
-                    logger.error("Matricule introuvable dans le token JWT");
+                    log.error("Matricule introuvable dans le token JWT");
                     throw new IllegalStateException("Matricule utilisateur introuvable");
                 }
 
                 return matricule;
             }
 
-            logger.error("Principal inconnu: {}", authentication.getPrincipal().getClass());
+            log.error("Principal inconnu: {}", authentication.getPrincipal().getClass());
             throw new IllegalStateException("Type d'authentification non supporté");
 
         } catch (Exception e) {
-            logger.error("Erreur récupération matricule: {}", e.getMessage(), e);
+            log.error("Erreur récupération matricule: {}", e.getMessage(), e);
             throw new IllegalStateException("Impossible d'identifier l'utilisateur: " + e.getMessage());
         }
     }
@@ -65,25 +62,25 @@ public class UserContext {
     /**
      * Définir le contexte (pour Camunda/Async)
      */
-    public static void setCurrentUser(String matricule) {
+    public void setCurrentUser(String matricule) {
         if (matricule == null || matricule.trim().isEmpty()) {
             throw new IllegalArgumentException("Matricule ne peut pas être vide");
         }
         currentUserMatricule.set(matricule);
-        logger.debug("Contexte utilisateur défini: {}", matricule);
+        log.debug("Contexte utilisateur défini: {}", matricule);
     }
 
     /**
      * Nettoyer le contexte
      */
-    public static void clear() {
+    public void clear() {
         currentUserMatricule.remove();
     }
 
     /**
      * Vérifier rôle
      */
-    public static boolean hasRole(String role) {
+    public boolean hasRole(String role) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth == null) return false;
@@ -92,7 +89,7 @@ public class UserContext {
                     .anyMatch(a -> a.getAuthority().equals("ROLE_" + role) ||
                             a.getAuthority().equals(role));
         } catch (Exception e) {
-            logger.error("Erreur vérification rôle: {}", e.getMessage());
+            log.error("Erreur vérification rôle: {}", e.getMessage());
             return false;
         }
     }
@@ -100,15 +97,15 @@ public class UserContext {
     /**
      * Récupérer le JWT complet
      */
-    public static Optional<Jwt> getCurrentJwt() {
+    public Optional<Jwt> getCurrentJwt() {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth.getPrincipal() instanceof Jwt) {
+            if (auth != null && auth.getPrincipal() instanceof Jwt) {
                 return Optional.of((Jwt) auth.getPrincipal());
             }
             return Optional.empty();
         } catch (Exception e) {
-            logger.error("Erreur récupération JWT: {}", e.getMessage());
+            log.error("Erreur récupération JWT: {}", e.getMessage());
             return Optional.empty();
         }
     }

@@ -1,243 +1,125 @@
 package org.example.rhcamunda.controller;
 
-import org.camunda.bpm.engine.RuntimeService;
-import org.camunda.bpm.engine.TaskService;
-import org.example.rhcamunda.entity.Conge;
-import org.example.rhcamunda.entity.Employe;
-import org.example.rhcamunda.repository.CongeRepository;
-import org.example.rhcamunda.repository.EmployeRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.rhcamunda.dto.conge.CongeRequest;
+import org.example.rhcamunda.dto.conge.CongeResponse;
+import org.example.rhcamunda.dto.conge.CongeDTO;
+import org.example.rhcamunda.service.CongeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/camunda/conge")
+@RequestMapping("/api/conges")
+@RequiredArgsConstructor
+@Slf4j
 @CrossOrigin(origins = "*")
 public class CongeController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CongeController.class);
-
-    @Autowired
-    private RuntimeService runtimeService;
-
-    @Autowired
-    private TaskService taskService;
-
-    @Autowired
-    private CongeRepository congeRepository;
-
-    @Autowired
-    private EmployeRepository employeRepository;
+    private final CongeService congeService;
 
     /**
-     * Démarrer une demande de congé
+     * 🔹 CRÉER MA DEMANDE DE CONGÉ
+     * ✅ Matricule récupéré automatiquement depuis JWT (pas dans le body)
+     * ✅ Validation avec @Valid
+     * ✅ Logique déléguée à CongeService
      */
-    @PostMapping("/start")
-    public ResponseEntity<?> startCongeRequest(@RequestBody CongeRequest request) {
-        try {
-            // ✅ 1. Valider les données
-            if (request.getEmployeeId() == null || request.getEmployeeId().isEmpty()) {
-                return ResponseEntity.badRequest().body(
-                        new ErrorResponse("Erreur", "Matricule employé requis")
-                );
-            }
+    @PostMapping
+    public ResponseEntity<CongeResponse> creerMaDemande(@RequestBody @Valid CongeRequest request) {
+        log.info("📝 Nouvelle demande de congé reçue");
 
-            if (request.getRequestedDays() <= 0) {
-                return ResponseEntity.badRequest().body(
-                        new ErrorResponse("Erreur", "Nombre de jours invalide")
-                );
-            }
+        // ✅ Le matricule est récupéré automatiquement depuis le contexte de sécurité
+        // Aucune donnée sensible ne vient du body pour l'identité
+        CongeResponse response = congeService.creerDemandeConge(request);
 
-            // ✅ 2. Récupérer l'employé depuis la BD via son matricule
-            String matricule = request.getEmployeeId();
-
-            Optional<Employe> employeOpt = employeRepository.findByMatricule(matricule);
-            if (!employeOpt.isPresent()) {
-                LOGGER.warn("❌ Employé non trouvé avec matricule: {}", matricule);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                        new ErrorResponse("Erreur", "Employé non trouvé: " + matricule)
-                );
-            }
-
-            Employe employe = employeOpt.get();
-            LOGGER.info("✅ Employé trouvé: {} {}", employe.getPrenom(), employe.getNom());
-
-            // ✅ 3. Créer les variables pour Camunda
-            Map<String, Object> variables = new HashMap<>();
-            variables.put("employeeId", matricule);
-            variables.put("leaveType", request.getLeaveType());
-            variables.put("startDate", request.getStartDate());
-            variables.put("endDate", request.getEndDate());
-            variables.put("reason", request.getReason());
-            variables.put("requestedDays", request.getRequestedDays());
-            variables.put("employeeName", employe.getFullName());
-
-            // ✅ 4. Démarrer le processus Camunda
-            String processInstanceId = runtimeService.startProcessInstanceByKey(
-                    "conge-request-process",
-                    variables
-            ).getId();
-
-            LOGGER.info("✅ Processus démarré - Instance ID: {}, Employé: {}",
-                    processInstanceId, employe.getFullName());
-
-            // ✅ 5. Créer et sauvegarder l'entité Conge dans la BD
-            Conge conge = Conge.builder()
-                    .processInstanceId(processInstanceId)
-                    .typeConge(request.getLeaveType())
-                    .dateDebut(LocalDate.parse(request.getStartDate()))
-                    .dateFin(LocalDate.parse(request.getEndDate()))
-                    .nbjours(request.getRequestedDays())
-                    .motif(request.getReason())
-                    .employe(employe)
-                    .statut(Conge.StatutConge.EN_ATTENTE)
-                    .build();
-
-            conge = congeRepository.save(conge);
-
-            LOGGER.info("✅ Entité Conge créée - ID: {}, Process Instance: {}",
-                    conge.getId(), processInstanceId);
-
-            // ✅ 6. Retourner la réponse
-            return ResponseEntity.ok(new SuccessResponse(
-                    "Demande de congé soumise avec succès",
-                    conge.getId(),
-                    processInstanceId
-            ));
-
-        } catch (Exception e) {
-            LOGGER.error("❌ Erreur lors du démarrage du processus", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                    new ErrorResponse("Erreur serveur", e.getMessage())
-            );
-        }
+        return ResponseEntity.ok(response);
     }
 
     /**
-     * Valider une demande de congé (par le chef)
+     * 🔹 OBTENIR MES CONGÉS
+     * ✅ Récupération automatique depuis le JWT
      */
-    @PostMapping("/{taskId}/approve")
-    public ResponseEntity<?> approveLeaveRequest(
-            @PathVariable String taskId,
-            @RequestBody ApprovalRequest approval) {
-        try {
-            // Compléter la tâche avec la variable approved=true
-            taskService.complete(taskId, Map.of("approved", true));
-
-            LOGGER.info("✅ Demande approuvée - Task ID: {}", taskId);
-
-            return ResponseEntity.ok(new SuccessResponse(
-                    "Demande approuvée avec succès",
-                    null,
-                    null
-            ));
-
-        } catch (Exception e) {
-            LOGGER.error("❌ Erreur lors de l'approbation", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                    new ErrorResponse("Erreur", e.getMessage())
-            );
-        }
+    @GetMapping("/my-conges")
+    public ResponseEntity<List<CongeDTO>> getMyConges() {
+        log.info("📋 Récupération de mes congés");
+        return ResponseEntity.ok(congeService.getMyConges());
     }
 
     /**
-     * Refuser une demande de congé
+     * 🔹 OBTENIR MES CONGÉS EN ATTENTE
      */
-    @PostMapping("/{taskId}/reject")
-    public ResponseEntity<?> rejectLeaveRequest(
-            @PathVariable String taskId,
-            @RequestBody ApprovalRequest approval) {
-        try {
-            // Compléter la tâche avec la variable approved=false
-            taskService.complete(taskId, Map.of("approved", false));
-
-            LOGGER.info("✅ Demande rejetée - Task ID: {}", taskId);
-
-            return ResponseEntity.ok(new SuccessResponse(
-                    "Demande rejetée avec succès",
-                    null,
-                    null
-            ));
-
-        } catch (Exception e) {
-            LOGGER.error("❌ Erreur lors du rejet", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                    new ErrorResponse("Erreur", e.getMessage())
-            );
-        }
+    @GetMapping("/my-conges/en-attente")
+    public ResponseEntity<List<CongeDTO>> getMyCongesEnAttente() {
+        return ResponseEntity.ok(congeService.getMyCongesEnAttente());
     }
 
-    // ==================== CLASSES INTERNES ====================
-
-    public static class CongeRequest {
-        private String employeeId;
-        private String leaveType;
-        private String startDate;
-        private String endDate;
-        private int requestedDays;
-        private String reason;
-
-        // Getters et Setters
-        public String getEmployeeId() { return employeeId; }
-        public void setEmployeeId(String employeeId) { this.employeeId = employeeId; }
-
-        public String getLeaveType() { return leaveType; }
-        public void setLeaveType(String leaveType) { this.leaveType = leaveType; }
-
-        public String getStartDate() { return startDate; }
-        public void setStartDate(String startDate) { this.startDate = startDate; }
-
-        public String getEndDate() { return endDate; }
-        public void setEndDate(String endDate) { this.endDate = endDate; }
-
-        public int getRequestedDays() { return requestedDays; }
-        public void setRequestedDays(int requestedDays) { this.requestedDays = requestedDays; }
-
-        public String getReason() { return reason; }
-        public void setReason(String reason) { this.reason = reason; }
+    /**
+     * 🔹 OBTENIR MON SOLDE DE CONGÉS
+     * ✅ Lecture temps réel depuis PostgreSQL
+     */
+    @GetMapping("/my-solde")
+    public ResponseEntity<Double> getMySoldeConge() {
+        return ResponseEntity.ok(congeService.getMySoldeConge());
     }
 
-    public static class ApprovalRequest {
-        private String comments;
-
-        public String getComments() { return comments; }
-        public void setComments(String comments) { this.comments = comments; }
+    /**
+     * 🔹 OBTENIR LES CONGÉS EN ATTENTE DE VALIDATION (Manager)
+     * ✅ Récupère automatiquement les employés sous sa responsabilité
+     */
+    @GetMapping("/validation/en-attente")
+    public ResponseEntity<List<CongeDTO>> getCongesEnAttenteValidation() {
+        log.info("🔍 Récupération des congés en attente pour validation");
+        return ResponseEntity.ok(congeService.getCongesEnAttenteValidation());
     }
 
-    public static class SuccessResponse {
-        private String message;
-        private Long congeId;
-        private String processInstanceId;
-
-        public SuccessResponse(String message, Long congeId, String processInstanceId) {
-            this.message = message;
-            this.congeId = congeId;
-            this.processInstanceId = processInstanceId;
-        }
-
-        public String getMessage() { return message; }
-        public Long getCongeId() { return congeId; }
-        public String getProcessInstanceId() { return processInstanceId; }
+    /**
+     * 🔹 APPROUVER UN CONGÉ (Workflow)
+     */
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<Void> approve(@PathVariable Long id) {
+        log.info("✅ Approbation congé ID: {}", id);
+        congeService.approuverConge(id);
+        return ResponseEntity.ok().build();
     }
 
-    public static class ErrorResponse {
-        private String error;
-        private String message;
+    /**
+     * 🔹 REFUSER UN CONGÉ (Workflow)
+     */
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<Void> reject(@PathVariable Long id, @RequestParam String motif) {
+        log.info("❌ Refus congé ID: {}, motif: {}", id, motif);
+        congeService.refuserConge(id, motif);
+        return ResponseEntity.ok().build();
+    }
 
-        public ErrorResponse(String error, String message) {
-            this.error = error;
-            this.message = message;
-        }
+    /**
+     * 🔹 ANNULER MON CONGÉ
+     * ✅ Vérification automatique que c'est bien mon congé
+     */
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<Void> cancel(@PathVariable Long id) {
+        log.info("🔄 Annulation congé ID: {}", id);
+        congeService.annulerMonConge(id);
+        return ResponseEntity.ok().build();
+    }
 
-        public String getError() { return error; }
-        public String getMessage() { return message; }
+    /**
+     * 🔹 OBTENIR UN CONGÉ PAR ID
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<CongeDTO> getConge(@PathVariable Long id) {
+        return ResponseEntity.ok(congeService.getCongeById(id));
+    }
+
+    /**
+     * 🔹 EXPORT EXCEL DE MES CONGÉS
+     */
+    @GetMapping("/export/excel")
+    public ResponseEntity<byte[]> exportMyCongesExcel() {
+        // À implémenter avec ExcelExportService
+        return ResponseEntity.ok().build();
     }
 }

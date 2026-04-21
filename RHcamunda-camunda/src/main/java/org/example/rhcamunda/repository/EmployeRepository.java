@@ -83,7 +83,7 @@ public interface EmployeRepository extends JpaRepository<Employe, Long> {
         """)
     List<Employe> findByAgenceAndActif(@Param("agenceId") Long agenceId);
 
-    // 🔹 Recherche par hiérarchie (employés sous un manager) - ✅ CORRIGÉ
+    // 🔹 Recherche par hiérarchie (employés sous un manager)
     @Query("""
         SELECT e FROM Employe e 
         WHERE e.actif = true 
@@ -120,10 +120,10 @@ public interface EmployeRepository extends JpaRepository<Employe, Long> {
     boolean existsByEmailAndActifTrue(String email);
 
     // =================================================================
-    // 🔹 COMPTAGES & STATISTIQUES (Dashboard RH)
+    // 🔹 COMPTAGES & STATISTIQUES (Dashboard RH) - ✅ NOUVELLES REQUÊTES DYNAMIQUES
     // =================================================================
 
-    // Comptages simples
+    // Comptages simples (existants)
     long countByActifTrue();
 
     long countByActifFalse();
@@ -136,7 +136,15 @@ public interface EmployeRepository extends JpaRepository<Employe, Long> {
 
     long countByAgenceIdAndActifTrue(Long agenceId);
 
-    // Comptages temporels (pour stats d'embauche)
+    // ✅ NOUVEAU : Comptage avec jointure département (pour stats par nom)
+    @Query("SELECT d.nom, COUNT(e) FROM Employe e JOIN e.departement d WHERE e.actif = true GROUP BY d.nom ORDER BY COUNT(e) DESC")
+    List<Object[]> countByDepartementNom();
+
+    // ✅ NOUVEAU : Solde de congé moyen des employés actifs
+    @Query("SELECT AVG(e.soldeConge) FROM Employe e WHERE e.actif = true")
+    Double avgSoldeCongeActifs();
+
+    // Comptages temporels (existants)
     @Query("""
         SELECT COUNT(e) FROM Employe e 
         WHERE e.actif = true 
@@ -146,7 +154,6 @@ public interface EmployeRepository extends JpaRepository<Employe, Long> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
 
-    // 🔹 Pour génération matricule : compte tous les employés (actifs + archivés) embauchés dans l'année
     @Query("""
         SELECT COUNT(e) FROM Employe e 
         WHERE e.dateEmbauche BETWEEN :startDate AND :endDate
@@ -154,6 +161,16 @@ public interface EmployeRepository extends JpaRepository<Employe, Long> {
     long countByDateEmbaucheBetweenAll(
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    // ✅ NOUVEAU : Évolution mensuelle des effectifs (requête native PostgreSQL optimisée)
+    @Query(value = """
+        SELECT TO_CHAR(date_embauche, 'YYYY-MM') as mois, COUNT(id) 
+        FROM employes 
+        WHERE date_embauche >= :debutAnnee 
+        GROUP BY mois 
+        ORDER BY mois
+        """, nativeQuery = true)
+    List<Object[]> countHiresByMonthNative(@Param("debutAnnee") LocalDate debutAnnee);
 
     // =================================================================
     // 🔹 REQUÊTES SPÉCIALES (Export, Dashboard)

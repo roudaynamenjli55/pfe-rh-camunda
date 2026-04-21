@@ -4,13 +4,16 @@ import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Data @Builder @NoArgsConstructor @AllArgsConstructor
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CongeResponse {
 
     private Long id;
     private String processInstanceId;
-    private String employeeMatricule;
-    private String employeeName;
+    private String employeMatricule;
+    private String employeNom;
     private String typeConge;
     private LocalDate dateDebut;
     private LocalDate dateFin;

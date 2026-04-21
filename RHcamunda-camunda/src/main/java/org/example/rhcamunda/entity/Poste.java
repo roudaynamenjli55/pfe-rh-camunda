@@ -39,4 +39,7 @@ public class Poste {
     public List<Employe> obtenirEmployes() {
         return employes;
     }
+    public String getNom() {
+        return this.titre;
+    }
 }

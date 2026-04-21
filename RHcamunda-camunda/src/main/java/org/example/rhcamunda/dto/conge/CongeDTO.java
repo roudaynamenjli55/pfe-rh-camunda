@@ -22,7 +22,7 @@ public class CongeDTO {
     private LocalDate dateFin;
     private Integer nbjours;
     private String statut;
-
+    private String motif;
     // Remplaçant
     private Long remplacantId;
     private String remplacantNom;
