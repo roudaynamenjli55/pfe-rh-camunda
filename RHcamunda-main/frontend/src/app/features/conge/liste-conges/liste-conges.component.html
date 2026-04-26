@@ -1,0 +1,84 @@
+<!-- ✅ PAS de .main-container, PAS de sidebar ici -->
+<div class="conge-container" >
+  
+  <!-- Header -->
+  <div class="page-header">
+    <div class="breadcrumb">
+      <span>Portail</span><span class="separator">›</span><span class="active">Mes Congés</span>
+    </div>
+    <h1>Mes Demandes de Congé</h1>
+    <p class="subtitle">Gérez vos demandes de congés et absences</p>
+    <button class="btn-new" (click)="nouvelleDemande()">
+      <span class="btn-icon">+</span> Nouvelle Demande
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card primary">
+      <div class="stat-icon">🗓️</div>
+      <div class="stat-value">{{ stats.joursRestants }}</div>
+      <div class="stat-label">Jours restants</div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-icon">📊</div>
+      <div class="stat-value">{{ stats.demandesAnnee }}</div>
+      <div class="stat-label">Demandes cette année</div>
+    </div>
+    <div class="stat-card warning">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-value">{{ stats.enAttente }}</div>
+      <div class="stat-label">En attente</div>
+    </div>
+    <div class="stat-card info">
+      <div class="stat-icon">✅</div>
+      <div class="stat-value">{{ stats.joursPris }}</div>
+      <div class="stat-label">Jours pris</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <div class="filter-group">
+      <label for="type">Type de congé</label>
+      <select id="type" name="type" [(ngModel)]="filters.typeConge">
+        <option *ngFor="let type of typesConge" [value]="type">{{ type }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="statut">Statut</label>
+      <select id="statut" name="statut" [(ngModel)]="filters.statut">
+        <option *ngFor="let statut of statuts" [value]="statut">{{ statut }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="periode">Période</label>
+      <select id="periode" name="periode" [(ngModel)]="filters.periode">
+        <option *ngFor="let periode of periodes" [value]="periode">{{ periode }}</option>
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button class="btn-filter" (click)="appliquerFiltres()">🔍 Filtrer</button>
+      <button class="btn-reset" (click)="reinitialiserFiltres()">Réinitialiser</button>
+    </div>
+  </div>
+
+  <!-- Requests List -->
+  <div class="requests-list">
+    <div class="request-card" *ngFor="let demande of demandesFiltrees">
+      <div class="card-header">
+        <div class="card-type">
+          <div class="type-icon">{{ getTypeIcon(demande.type) }}</div>
+          <div class="type-info">
+            <h3>{{ demande.type }}</h3>
+            <p>Demandé le {{ demande.dateDemande | date:'dd MMMM yyyy' }}</p>
+          </div>
+        </div>
+        <div class="status-badge" [class]="getStatusClass(demande.statut)">
+          {{ getStatusIcon(demande.statut) }} {{ demande.statut }}
+        </div>
+      </div>
+      <!-- ... reste du contenu (dates, motif, actions) ... -->
+    </div>
+  </div>
+</div>

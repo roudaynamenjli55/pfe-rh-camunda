@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRH Bancaire — Administration</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#111111;
+  --ink-mid:#2a2a2a;
+  --ink-soft:#444444;
+  --gold:#e86a00;
+  --gold-lt:#ff8c2a;
+  --gold-pale:#fff0e0;
+  --gold-bg:#fff5eb;
+  --teal:#0891b2;
+  --teal-lt:#e0f7fb;
+  --green:#15803d;
+  --green-lt:#dcfce7;
+  --amber:#b45309;
+  --amber-lt:#fef3c7;
+  --red:#dc2626;
+  --red-lt:#fee2e2;
+  --purple:#7c3aed;
+  --purple-lt:#ede9fe;
+  --slate:#f1f5f9;
+  --border:#e2e8f0;
+  --text-mute:#64748b;
+  --text-sub:#94a3b8;
+  --white:#ffffff;
+  --sidebar:240px;
+  --radius:10px;
+}
+
+body{font-family:'DM Sans',sans-serif;background:var(--slate);color:var(--ink);font-size:14px;display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:260px;flex-shrink:0;background:#1a1a1a;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.logo{padding:20px 16px 16px;display:flex;align-items:center;gap:12px}
+.logo-icon{width:46px;height:46px;border-radius:12px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.logo-bank{font-size:15px;font-weight:700;color:#fff;line-height:1.2}
+.logo-app{font-size:12px;color:rgba(255,255,255,.45);margin-top:2px}
+.s-profile{padding:14px 16px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.s-av{width:40px;height:40px;border-radius:12px;background:#6c5ce7;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
+.s-name{font-size:14px;font-weight:700;color:#fff;margin-top:10px}
+.s-role{font-size:12px;color:rgba(255,255,255,.45);margin-top:2px}
+.nav-sec{padding:14px 0 4px}
+.nav-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.25);padding:0 16px 8px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;color:rgba(255,255,255,.6);font-size:13.5px;font-weight:500;cursor:pointer;border-radius:10px;margin:2px 8px;transition:.15s;border:none}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,.06)}
+.nav-item.on{color:var(--gold);background:rgba(232,106,0,.15);font-weight:700}
+.nav-ic{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.nav-item.on .nav-ic{background:rgba(232,106,0,.2)}
+.nav-badge{margin-left:auto;background:var(--gold);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;min-width:22px;text-align:center}
+.nav-logout{display:flex;align-items:center;gap:12px;padding:10px 14px;color:#e86a00;font-size:13.5px;font-weight:600;cursor:pointer;border-radius:10px;margin:2px 8px;transition:.15s}
+.nav-logout:hover{background:rgba(232,106,0,.1)}
+.nav-logout .nav-ic{background:rgba(232,106,0,.12)}
+.sidebar-foot{margin-top:auto;padding:10px 0;border-top:1px solid rgba(255,255,255,.08)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-height:100vh;overflow:hidden}
+
+/* TOPBAR */
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:62px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:20;box-shadow:0 1px 3px rgba(13,27,42,.06)}
+.bc{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-mute)}
+.bc-sep{color:var(--border)}
+.bc-cur{color:var(--ink);font-weight:600}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.notif{width:38px;height:38px;border-radius:50%;background:var(--slate);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;font-size:16px;transition:.15s}
+.notif:hover{background:var(--border)}
+.notif-dot{position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:50%;background:var(--red);border:2px solid var(--white)}
+
+/* CONTENT */
+.content{padding:28px;flex:1;animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn-gold{background:var(--gold);color:var(--white)}
+.btn-gold:hover{background:var(--gold-lt);transform:translateY(-1px);box-shadow:0 4px 12px rgba(232,106,0,.3)}
+.btn-dark{background:var(--ink);color:var(--gold-lt)}
+.btn-dark:hover{background:var(--ink-mid)}
+.btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--slate)}
+.btn-sm{padding:6px 13px;font-size:12px;border-radius:6px}
+.btn-danger{background:var(--red-lt);color:var(--red);border:1px solid #fca5a5}
+.btn-danger:hover{background:#fecaca}
+.btn-success{background:var(--green-lt);color:var(--green);border:1px solid #86efac}
+.btn-success:hover{background:#bbf7d0}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;transition:.2s}
+.stat:hover{box-shadow:0 4px 16px rgba(13,27,42,.08);transform:translateY(-2px)}
+.stat-stripe{position:absolute;top:0;left:0;right:0;height:3px}
+.stat-ic{position:absolute;right:18px;top:18px;font-size:26px;opacity:.1}
+.stat-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-mute)}
+.stat-val{font-size:30px;font-weight:700;font-family:'DM Mono',monospace;color:var(--ink);margin:8px 0 4px;line-height:1}
+.stat-sub{font-size:11px;color:var(--text-sub)}
+
+/* SECTION HDR */
+.sec-hdr{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
+.sec-title{font-size:17px;font-weight:700;color:var(--ink)}
+.sec-sub{font-size:12px;color:var(--text-mute);margin-top:3px}
+.sec-acts{display:flex;gap:8px;align-items:center}
+
+/* MODULE GRID */
+.mod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px}
+.mod-card{
+  background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:20px;
+  display:flex;align-items:flex-start;gap:14px;cursor:pointer;
+  transition:all .2s cubic-bezier(.4,0,.2,1);
+}
+.mod-card:hover{border-color:var(--gold);box-shadow:0 6px 20px rgba(232,106,0,.12);transform:translateY(-2px)}
+.mod-ic{width:46px;height:46px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.mod-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.mod-desc{font-size:12px;color:var(--text-mute);line-height:1.5}
+.mod-count{font-size:11px;font-weight:600;font-family:'DM Mono',monospace;margin-top:8px;color:var(--gold)}
+.mod-arrow{margin-left:auto;color:var(--text-sub);font-size:16px;align-self:center;transition:.15s}
+.mod-card:hover .mod-arrow{color:var(--gold);transform:translateX(3px)}
+
+/* SPLIT */
+.split{display:grid;grid-template-columns:1fr 340px;gap:20px;margin-bottom:32px}
+
+/* TABLE */
+.tcard{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.ttbar{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tsearch{display:flex;align-items:center;gap:8px;background:var(--slate);border:1px solid var(--border);border-radius:6px;padding:7px 12px;min-width:220px;font-size:13px;color:var(--text-mute)}
+.tsearch input{border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);outline:none;flex:1;min-width:120px}
+.fsel-sm{padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink);background:var(--white);cursor:pointer}
+.ttbar-right{margin-left:auto;display:flex;gap:8px}
+table{width:100%;border-collapse:collapse}
+thead th{background:var(--slate);padding:10px 18px;text-align:left;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-mute);border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border);transition:.12s}
+tbody tr:hover{background:var(--gold-bg)}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:12px 18px;font-size:13px;vertical-align:middle}
+.emp-cell{display:flex;align-items:center;gap:10px}
+.av-sm{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.emp-name{font-weight:600;font-size:13px}
+.emp-email{font-size:11px;color:var(--text-sub);font-family:'DM Mono',monospace}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.b-admin{background:var(--red-lt);color:var(--red)}
+.b-rh{background:#eff6ff;color:#1d4ed8}
+.b-chef{background:var(--green-lt);color:var(--green)}
+.b-emp{background:var(--amber-lt);color:var(--amber)}
+.b-on{background:var(--green-lt);color:var(--green)}
+.b-off{background:var(--red-lt);color:var(--red)}
+
+/* SWITCH */
+.sw{display:inline-flex;align-items:center;cursor:pointer}
+.sw-track{width:36px;height:20px;border-radius:10px;background:var(--border);position:relative;transition:background .2s}
+.sw-track.on{background:var(--green)}
+.sw-thumb{width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.sw-track.on .sw-thumb{left:19px}
+
+/* PAGINATION */
+.pg{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-top:1px solid var(--border);font-size:12px;color:var(--text-mute)}
+.pg-nums{display:flex;gap:4px}
+.pg-n{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--white);color:var(--ink);transition:.12s}
+.pg-n.cur{background:var(--ink);color:var(--gold-lt);border-color:var(--ink)}
+.pg-n:hover:not(.cur){background:var(--slate)}
+
+/* RIGHT PANEL */
+.rpanel{display:flex;flex-direction:column;gap:16px}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.card-hdr{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:14px;font-weight:700;color:var(--ink)}
+.card-body{padding:18px 20px}
+
+/* LOG */
+.log{display:flex;flex-direction:column}
+.log-item{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)}
+.log-item:last-child{border-bottom:none;padding-bottom:0}
+.log-item:first-child{padding-top:0}
+.log-ic{width:30px;height:30px;border-radius:50%;background:var(--slate);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px}
+.log-msg{font-size:12px;color:var(--ink);line-height:1.5}
+.log-user{font-weight:700;color:var(--gold)}
+.log-time{font-size:10px;color:var(--text-sub);font-family:'DM Mono',monospace;margin-top:2px}
+
+/* SESSIONS */
+.sess-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.sess-item:last-child{border-bottom:none;padding-bottom:0}
+.sess-item:first-child{padding-top:0}
+.sess-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+
+/* PBAR */
+.pbar-row{margin-bottom:12px}
+.pbar-row:last-child{margin-bottom:0}
+.pbar-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--text-mute);margin-bottom:5px}
+.pbar-val{font-weight:700;color:var(--ink);font-family:'DM Mono',monospace}
+.pbar{height:5px;background:var(--border);border-radius:10px;overflow:hidden}
+.pfill{height:100%;border-radius:10px;background:var(--gold)}
+.pfill.green{background:var(--green)}
+.pfill.teal{background:var(--teal)}
+
+/* FORM */
+.form-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin-bottom:28px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.fg{display:flex;flex-direction:column;gap:6px}
+.fg.full{grid-column:1/-1}
+.flbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-mute)}
+.finp,.fsel,.ftxt{width:100%;padding:9px 13px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);background:var(--white);transition:.15s}
+.finp:focus,.fsel:focus,.ftxt:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,106,0,.12)}
+.form-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:18px;border-top:1px solid var(--border)}
+
+/* CHECKBOX GROUP */
+.role-checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.role-check{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:.15s}
+.role-check:hover{border-color:var(--gold);background:var(--gold-bg)}
+.role-check input{accent-color:var(--gold);width:14px;height:14px}
+.role-check span{font-size:13px;font-weight:500}
+
+/* DIV */
+.div{height:1px;background:var(--border);margin:28px 0}
+
+/* CHIP */
+.chip{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:var(--green-lt);color:var(--green)}
+.chip.warn{background:var(--amber-lt);color:var(--amber)}
+
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <!-- Logo -->
+  <div class="logo">
+    <div class="logo-icon">&#127970;</div>
+    <div>
+      <div class="logo-bank">BanqueRH</div>
+      <div class="logo-app">Portail Employ&#233;</div>
+    </div>
+  </div>
+
+  <!-- User profile -->
+  <div class="s-profile">
+    <div class="s-av">AD</div>
+    <div class="s-name">Admin Syst&#232;me</div>
+    <div class="s-role">Administrateur &middot; Si&#232;ge Social</div>
+  </div>
+
+  <!-- PRINCIPAL -->
+  <div class="nav-sec">
+    <div class="nav-lbl">Principal</div>
+    <div class="nav-item"><span class="nav-ic">&#127958;</span>Mes Cong&#233;s<span class="nav-badge">2</span></div>
+    <div class="nav-item"><span class="nav-ic">&#128275;</span>Autorisations</div>
+    <div class="nav-item"><span class="nav-ic">&#128196;</span>Attestations</div>
+  </div>
+
+  <!-- SUIVI -->
+  <div class="nav-sec">
+    <div class="nav-lbl">Suivi</div>
+    <div class="nav-item"><span class="nav-ic">&#128203;</span>Historique</div>
+    <div class="nav-item"><span class="nav-ic">&#128276;</span>Notifications<span class="nav-badge">3</span></div>
+  </div>
+
+  <!-- ADMINISTRATEUR -->
+  <div class="nav-sec">
+    <div class="nav-lbl">Administrateur</div>
+    <div class="nav-item on"><span class="nav-ic">&#9881;&#65039;</span>Vue d'ensemble</div>
+    <div class="nav-item"><span class="nav-ic">&#128100;</span>Utilisateurs<span class="nav-badge">2</span></div>
+    <div class="nav-item"><span class="nav-ic">&#128274;</span>R&#244;les &amp; Permissions</div>
+    <div class="nav-item"><span class="nav-ic">&#127970;</span>Agences</div>
+    <div class="nav-item"><span class="nav-ic">&#127962;</span>D&#233;partements</div>
+    <div class="nav-item"><span class="nav-ic">&#128203;</span>Journaux d'audit</div>
+    <div class="nav-item"><span class="nav-ic">&#128273;</span>Sessions actives</div>
+  </div>
+
+  <!-- CAMPAGNE EVALUATION -->
+  <div class="nav-sec">
+    <div class="nav-lbl">Campagne &#201;valuation</div>
+    <div class="nav-item"><span class="nav-ic">&#127919;</span>Campagnes</div>
+    <div class="nav-item"><span class="nav-ic">&#128202;</span>R&#233;sultats</div>
+    <div class="nav-item"><span class="nav-ic">&#128221;</span>Formulaires</div>
+    <div class="nav-item"><span class="nav-ic">&#128228;</span>Exports</div>
+  </div>
+
+  <!-- Logout -->
+  <div class="sidebar-foot">
+    <div class="nav-logout"><span class="nav-ic">&#128682;</span>D&#233;connexion</div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="bc">
+      <span>Administration</span><span class="bc-sep">›</span>
+      <span class="bc-cur">Vue d'ensemble</span>
+    </div>
+    <div class="tb-right">
+      <div class="notif">🔔<div class="notif-dot"></div></div>
+      <button class="btn btn-ghost btn-sm">📤 Exporter logs</button>
+      <button class="btn btn-dark">＋ Nouvel utilisateur</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-stripe" style="background:var(--gold)"></div>
+        <div class="stat-ic">👥</div>
+        <div class="stat-lbl">Utilisateurs actifs</div>
+        <div class="stat-val">143</div>
+        <div class="stat-sub">2 comptes désactivés</div>
+      </div>
+      <div class="stat">
+        <div class="stat-stripe" style="background:var(--teal)"></div>
+        <div class="stat-ic">🏦</div>
+        <div class="stat-lbl">Agences</div>
+        <div class="stat-val">12</div>
+        <div class="stat-sub">sur 3 régions</div>
+      </div>
+      <div class="stat">
+        <div class="stat-stripe" style="background:var(--green)"></div>
+        <div class="stat-ic">🏢</div>
+        <div class="stat-lbl">Départements</div>
+        <div class="stat-val">8</div>
+        <div class="stat-sub">actifs</div>
+      </div>
+      <div class="stat">
+        <div class="stat-stripe" style="background:var(--amber)"></div>
+        <div class="stat-ic">📋</div>
+        <div class="stat-lbl">Actions aujourd'hui</div>
+        <div class="stat-val">247</div>
+        <div class="stat-sub">journaux d'audit</div>
+      </div>
+    </div>
+
+    <!-- MODULES -->
+    <div class="sec-hdr">
+      <div>
+        <div class="sec-title">Modules d'administration</div>
+        <div class="sec-sub">Accès rapide à la configuration du système</div>
+      </div>
+    </div>
+
+    <div class="mod-grid">
+      <div class="mod-card">
+        <div class="mod-ic" style="background:#111111">👤</div>
+        <div style="flex:1">
+          <div class="mod-title">Gestion des utilisateurs</div>
+          <div class="mod-desc">Créer, modifier, désactiver les comptes et gérer les accès.</div>
+          <div class="mod-count">143 actifs · 2 désactivés</div>
+        </div>
+        <div class="mod-arrow">›</div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-ic" style="background:var(--gold-pale)">🔐</div>
+        <div style="flex:1">
+          <div class="mod-title">Rôles & Permissions</div>
+          <div class="mod-desc">Gérer les rôles (Employé, Chef, RH, Admin) et leurs droits.</div>
+          <div class="mod-count">4 rôles · 18 permissions</div>
+        </div>
+        <div class="mod-arrow">›</div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-ic" style="background:var(--teal-lt)">🏦</div>
+        <div style="flex:1">
+          <div class="mod-title">Agences</div>
+          <div class="mod-desc">Administrer les agences bancaires et leurs responsables.</div>
+          <div class="mod-count">12 agences · 3 régions</div>
+        </div>
+        <div class="mod-arrow">›</div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-ic" style="background:var(--green-lt)">🏢</div>
+        <div style="flex:1">
+          <div class="mod-title">Départements</div>
+          <div class="mod-desc">Configurer les départements et leurs chefs hiérarchiques.</div>
+          <div class="mod-count">8 départements actifs</div>
+        </div>
+        <div class="mod-arrow">›</div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-ic" style="background:var(--purple-lt)">💼</div>
+        <div style="flex:1">
+          <div class="mod-title">Postes</div>
+          <div class="mod-desc">Définir les postes, niveaux et hiérarchies internes.</div>
+          <div class="mod-count">24 postes définis</div>
+        </div>
+        <div class="mod-arrow">›</div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-ic" style="background:var(--red-lt)">📋</div>
+        <div style="flex:1">
+          <div class="mod-title">Journaux d'audit</div>
+          <div class="mod-desc">Consulter l'historique des actions et traçabilité complète.</div>
+          <div class="mod-count">247 entrées aujourd'hui</div>
+        </div>
+        <div class="mod-arrow">›</div>
+      </div>
+    </div>
+
+    <!-- DIVIDER -->
+    <div class="div"></div>
+
+    <!-- USERS + SIDEBAR -->
+    <div class="sec-hdr">
+      <div>
+        <div class="sec-title">Gestion des utilisateurs</div>
+        <div class="sec-sub">Gérer les comptes, rôles et accès des utilisateurs</div>
+      </div>
+      <button class="btn btn-dark btn-sm">＋ Ajouter un utilisateur</button>
+    </div>
+
+    <div class="split">
+
+      <!-- TABLE -->
+      <div>
+        <div class="tcard">
+          <div class="ttbar">
+            <div class="tsearch">🔍 <input placeholder="Rechercher par nom, email…"></div>
+            <select class="fsel-sm">
+              <option>Tous les rôles</option>
+              <option>Administrateur</option>
+              <option>RH</option>
+              <option>Chef Hiérarchique</option>
+              <option>Employé</option>
+            </select>
+            <select class="fsel-sm">
+              <option>Tous statuts</option>
+              <option>Actif</option>
+              <option>Désactivé</option>
+            </select>
+            <div class="ttbar-right">
+              <button class="btn btn-ghost btn-sm">📤 Excel</button>
+              <button class="btn btn-ghost btn-sm">📄 PDF</button>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Utilisateur</th>
+                <th>Rôle</th>
+                <th>Agence</th>
+                <th>Actif</th>
+                <th>Dernière connexion</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="emp-cell">
+                    <div class="av-sm" style="background:var(--red-lt);color:var(--red)">AD</div>
+                    <div><div class="emp-name">Admin Système</div><div class="emp-email">admin@bankcorp.tn</div></div>
+                  </div>
+                </td>
+                <td><span class="badge b-admin">Administrateur</span></td>
+                <td>Siège Social</td>
+                <td><div class="sw"><div class="sw-track on"><div class="sw-thumb"></div></div></div></td>
+                <td style="font-family:'DM Mono',monospace;font-size:12px">Aujourd'hui 09:14</td>
+                <td>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-ghost btn-sm">✏️ Modifier</button>
+                    <button class="btn btn-danger btn-sm">🚫</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="emp-cell">
+                    <div class="av-sm" style="background:#eff6ff;color:#1d4ed8">SH</div>
+                    <div><div class="emp-name">Sara Haddad</div><div class="emp-email">s.haddad@bankcorp.tn</div></div>
+                  </div>
+                </td>
+                <td><span class="badge b-rh">RH</span></td>
+                <td>Tunis Centre</td>
+                <td><div class="sw"><div class="sw-track on"><div class="sw-thumb"></div></div></div></td>
+                <td style="font-family:'DM Mono',monospace;font-size:12px">Aujourd'hui 08:32</td>
+                <td>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-ghost btn-sm">✏️ Modifier</button>
+                    <button class="btn btn-danger btn-sm">🚫</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="emp-cell">
+                    <div class="av-sm" style="background:var(--green-lt);color:var(--green)">MB</div>
+                    <div><div class="emp-name">Mohamed Ben Ali</div><div class="emp-email">m.benali@bankcorp.tn</div></div>
+                  </div>
+                </td>
+                <td><span class="badge b-chef">Chef Hiérarchique</span></td>
+                <td>Sfax Médina</td>
+                <td><div class="sw"><div class="sw-track on"><div class="sw-thumb"></div></div></div></td>
+                <td style="font-family:'DM Mono',monospace;font-size:12px">Hier 16:45</td>
+                <td>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-ghost btn-sm">✏️ Modifier</button>
+                    <button class="btn btn-danger btn-sm">🚫</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="emp-cell">
+                    <div class="av-sm" style="background:var(--amber-lt);color:var(--amber)">AM</div>
+                    <div><div class="emp-name">Ahmed Mansour</div><div class="emp-email">a.mansour@bankcorp.tn</div></div>
+                  </div>
+                </td>
+                <td><span class="badge b-emp">Employé</span></td>
+                <td>Tunis Nord</td>
+                <td><div class="sw"><div class="sw-track on"><div class="sw-thumb"></div></div></div></td>
+                <td style="font-family:'DM Mono',monospace;font-size:12px">Hier 14:20</td>
+                <td>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-ghost btn-sm">✏️ Modifier</button>
+                    <button class="btn btn-danger btn-sm">🚫</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="emp-cell">
+                    <div class="av-sm" style="background:var(--slate);color:var(--text-mute)">NZ</div>
+                    <div><div class="emp-name">Nadia Zouari</div><div class="emp-email">n.zouari@bankcorp.tn</div></div>
+                  </div>
+                </td>
+                <td><span class="badge b-emp">Employé</span></td>
+                <td>Sousse Centre</td>
+                <td><div class="sw"><div class="sw-track on"><div class="sw-thumb"></div></div></div></td>
+                <td style="font-family:'DM Mono',monospace;font-size:12px">22/04/2025</td>
+                <td>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-ghost btn-sm">✏️ Modifier</button>
+                    <button class="btn btn-danger btn-sm">🚫</button>
+                  </div>
+                </td>
+              </tr>
+              <tr style="opacity:.6">
+                <td>
+                  <div class="emp-cell">
+                    <div class="av-sm" style="background:var(--slate);color:var(--text-mute)">OT</div>
+                    <div><div class="emp-name">Omar Trabelsi</div><div class="emp-email">o.trabelsi@bankcorp.tn</div></div>
+                  </div>
+                </td>
+                <td><span class="badge b-emp">Employé</span></td>
+                <td>Monastir</td>
+                <td><div class="sw"><div class="sw-track"><div class="sw-thumb"></div></div></div></td>
+                <td style="font-family:'DM Mono',monospace;font-size:12px">12/01/2025</td>
+                <td>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-ghost btn-sm">✏️</button>
+                    <button class="btn btn-success btn-sm">✓ Activer</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="pg">
+            <span>Affichage 1–6 sur 145 utilisateurs</span>
+            <div class="pg-nums">
+              <div class="pg-n cur">1</div>
+              <div class="pg-n">2</div>
+              <div class="pg-n">3</div>
+              <div class="pg-n">…</div>
+              <div class="pg-n">25</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="rpanel">
+
+        <!-- Audit Log -->
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Journal d'audit</span>
+            <button class="btn btn-ghost btn-sm">Voir tout →</button>
+          </div>
+          <div class="card-body" style="padding:0 20px">
+            <div class="log">
+              <div class="log-item">
+                <div class="log-ic">🔑</div>
+                <div>
+                  <div class="log-msg"><span class="log-user">Sara Haddad</span> s'est connectée au système</div>
+                  <div class="log-time">Aujourd'hui · 08:32:14</div>
+                </div>
+              </div>
+              <div class="log-item">
+                <div class="log-ic">✅</div>
+                <div>
+                  <div class="log-msg"><span class="log-user">M. Ben Ali</span> a approuvé la demande de congé EMP-0042</div>
+                  <div class="log-time">Aujourd'hui · 09:05:47</div>
+                </div>
+              </div>
+              <div class="log-item">
+                <div class="log-ic">👤</div>
+                <div>
+                  <div class="log-msg"><span class="log-user">Admin</span> a créé l'utilisateur <strong>Nadia Zouari</strong></div>
+                  <div class="log-time">Hier · 15:22:09</div>
+                </div>
+              </div>
+              <div class="log-item">
+                <div class="log-ic">🎯</div>
+                <div>
+                  <div class="log-msg"><span class="log-user">Sara Haddad</span> a lancé la campagne <strong>S1 2025</strong></div>
+                  <div class="log-time">Hier · 10:00:00</div>
+                </div>
+              </div>
+              <div class="log-item">
+                <div class="log-ic">🔒</div>
+                <div>
+                  <div class="log-msg"><span class="log-user">Admin</span> a désactivé <strong>Omar Trabelsi</strong></div>
+                  <div class="log-time">12/01/2025 · 08:14</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sessions actives -->
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Sessions actives</span>
+            <span class="chip">3 en ligne</span>
+          </div>
+          <div class="card-body" style="padding:0 20px">
+            <div class="sess-item">
+              <div class="sess-dot"></div>
+              <div class="av-sm" style="background:var(--red-lt);color:var(--red);font-size:10px">AD</div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:600">Admin Système</div>
+                <div style="font-size:11px;color:var(--text-sub);font-family:'DM Mono',monospace">192.168.1.10</div>
+              </div>
+              <button class="btn btn-danger btn-sm">Déco.</button>
+            </div>
+            <div class="sess-item">
+              <div class="sess-dot"></div>
+              <div class="av-sm" style="background:#eff6ff;color:#1d4ed8;font-size:10px">SH</div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:600">Sara Haddad</div>
+                <div style="font-size:11px;color:var(--text-sub);font-family:'DM Mono',monospace">192.168.1.45</div>
+              </div>
+              <button class="btn btn-danger btn-sm">Déco.</button>
+            </div>
+            <div class="sess-item">
+              <div class="sess-dot"></div>
+              <div class="av-sm" style="background:var(--green-lt);color:var(--green);font-size:10px">MB</div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:600">M. Ben Ali</div>
+                <div style="font-size:11px;color:var(--text-sub);font-family:'DM Mono',monospace">192.168.2.18</div>
+              </div>
+              <button class="btn btn-danger btn-sm">Déco.</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Indicateurs -->
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Indicateurs système</span></div>
+          <div class="card-body">
+            <div class="pbar-row">
+              <div class="pbar-lbl"><span>Connexions (30 j.)</span><span class="pbar-val">1 847</span></div>
+              <div class="pbar"><div class="pfill" style="width:74%"></div></div>
+            </div>
+            <div class="pbar-row">
+              <div class="pbar-lbl"><span>Demandes traitées</span><span class="pbar-val">342</span></div>
+              <div class="pbar"><div class="pfill teal" style="width:85%"></div></div>
+            </div>
+            <div class="pbar-row">
+              <div class="pbar-lbl"><span>Taux d'adoption</span><span class="pbar-val">96%</span></div>
+              <div class="pbar"><div class="pfill green" style="width:96%"></div></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ADD USER FORM -->
+    <div class="div"></div>
+    <div class="sec-hdr">
+      <div>
+        <div class="sec-title">Ajouter un utilisateur</div>
+        <div class="sec-sub">Créer un nouveau compte et assigner un rôle</div>
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="form-grid">
+        <div class="fg">
+          <label class="flbl">Prénom *</label>
+          <input class="finp" type="text" placeholder="Prénom">
+        </div>
+        <div class="fg">
+          <label class="flbl">Nom *</label>
+          <input class="finp" type="text" placeholder="Nom de famille">
+        </div>
+        <div class="fg">
+          <label class="flbl">Adresse email *</label>
+          <input class="finp" type="email" placeholder="prenom.nom@bankcorp.tn">
+        </div>
+        <div class="fg">
+          <label class="flbl">Matricule</label>
+          <input class="finp" type="text" placeholder="EMP-XXXX (généré auto.)">
+        </div>
+        <div class="fg">
+          <label class="flbl">Agence *</label>
+          <select class="fsel">
+            <option>Sélectionner une agence...</option>
+            <option>Siège Social</option>
+            <option>Tunis Centre</option>
+            <option>Tunis Nord</option>
+            <option>Sfax Médina</option>
+            <option>Sousse Centre</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="flbl">Département *</label>
+          <select class="fsel">
+            <option>Sélectionner un département...</option>
+            <option>Crédits</option>
+            <option>Commerce</option>
+            <option>Informatique</option>
+            <option>Opérations</option>
+            <option>Compliance</option>
+            <option>Audit</option>
+          </select>
+        </div>
+        <div class="fg full">
+          <label class="flbl">Rôle(s) *</label>
+          <div class="role-checks">
+            <label class="role-check"><input type="radio" name="role"><span>👤 Employé</span></label>
+            <label class="role-check"><input type="radio" name="role"><span>👑 Chef Hiérarchique</span></label>
+            <label class="role-check"><input type="radio" name="role"><span>🏢 Ressources Humaines</span></label>
+            <label class="role-check"><input type="radio" name="role"><span>⚙️ Administrateur</span></label>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="flbl">Mot de passe temporaire *</label>
+          <input class="finp" type="password" placeholder="••••••••">
+        </div>
+        <div class="fg">
+          <label class="flbl">Confirmer le mot de passe *</label>
+          <input class="finp" type="password" placeholder="••••••••">
+        </div>
+      </div>
+      <div class="form-foot">
+        <button class="btn btn-ghost">Annuler</button>
+        <button class="btn btn-dark">💾 Enregistrer</button>
+        <button class="btn btn-gold">✓ Créer & Activer</button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+</body>
+</html>

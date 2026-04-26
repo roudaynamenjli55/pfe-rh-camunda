@@ -1,0 +1,86 @@
+<div class="page-container">
+  
+  <!-- Toolbar -->
+  <div class="toolbar no-print">
+    <button class="btn" (click)="retourDashboard()">← Retour</button>
+    <div class="actions">
+      <button class="btn" (click)="envoyerEmail()">📧 Email</button>
+      <button class="btn" (click)="telechargerPDF()">📥 PDF</button>
+      <button class="btn" (click)="imprimer()">🖨️ Imprimer</button>
+    </div>
+  </div>
+
+  <!-- Document -->
+  <div class="document-paper">
+    
+    <!-- Header -->
+    <div class="doc-header">
+      <div class="header-left">
+        <div class="logo-circle"></div>
+        <p class="tagline">Votre partenaire financier de confiance</p>
+      </div>
+      <div class="header-right">
+        <p>{{ attestationData.banque.adresse }}</p>
+        <p>Tél: {{ attestationData.banque.telephone }}</p>
+        <p>{{ attestationData.banque.email }}</p>
+      </div>
+    </div>
+
+    <!-- Titre -->
+    <div class="doc-title-section">
+      <h1>ATTESTATION DE TRAVAIL</h1>
+      <div class="title-underline"></div>
+    </div>
+
+    <!-- Référence -->
+    <div class="ref-date-row">
+      <span class="ref-number">N° Attestation: {{ attestationData.reference }}</span>
+      <span class="doc-date">{{ attestationData.lieu }}, le {{ attestationData.date }}</span>
+    </div>
+
+    <!-- Intro -->
+    <p class="intro-text">
+      Le Directeur des Ressources Humaines de la Banque Internationale, soussigné, atteste par la présente que :
+    </p>
+
+    <!-- Box Info -->
+    <div class="info-box">
+      <h3 class="box-title">INFORMATIONS DE L'EMPLOYÉ</h3>
+      <div class="info-grid">
+        <div class="info-item"><strong>Nom et Prénom :</strong> {{ attestationData.employe.nomPrenom }}</div>
+        <div class="info-item"><strong>Matricule :</strong> {{ attestationData.employe.matricule }}</div>
+        <div class="info-item"><strong>CIN :</strong> {{ attestationData.employe.cin }}</div>
+        <div class="info-item"><strong>Date de naissance :</strong> {{ attestationData.employe.dateNaissance }}</div>
+        <div class="info-item"><strong>Fonction :</strong> {{ attestationData.employe.fonction }}</div>
+        <div class="info-item"><strong>Département :</strong> {{ attestationData.employe.departement }}</div>
+        <div class="info-item"><strong>Date d'embauche :</strong> {{ attestationData.employe.dateEmbauche }}</div>
+        <div class="info-item"><strong>Type de contrat :</strong> {{ attestationData.employe.typeContrat }}</div>
+      </div>
+    </div>
+
+    <!-- Corps texte -->
+    <div class="body-text">
+      <p>
+        Travaille au sein de notre établissement bancaire depuis le <strong>{{ attestationData.employe.dateEmbauche }}</strong>, 
+        en qualité de <strong>{{ attestationData.employe.fonction }}</strong> au sein du département {{ attestationData.employe.departement }}.
+      </p>
+      <br>
+      <p>Cette attestation est délivrée à l'intéressé(e) pour servir et valoir ce que de droit.</p>
+    </div>
+
+    <!-- Signature -->
+    <div class="signature-section">
+      <div class="signature-title">Le Directeur des Ressources Humaines</div>
+      <div class="signature-box">
+        <span class="signature-text">Signature et cachet</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="doc-footer">
+      <p>{{ attestationData.banque.nom }} - RC: {{ attestationData.banque.rc }} - Code TVA: {{ attestationData.banque.tva }}</p>
+      <p>{{ attestationData.banque.website }}</p>
+    </div>
+
+  </div>
+</div>

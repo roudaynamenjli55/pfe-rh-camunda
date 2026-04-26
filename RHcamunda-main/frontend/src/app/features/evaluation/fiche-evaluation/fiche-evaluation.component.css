@@ -1,0 +1,609 @@
+/* =========================================
+   VARIABLES & RESET
+   ========================================= */
+:root {
+  --primary: #ff9800;
+  --primary-light: #fff3e0;
+  --primary-dark: #f57c00;
+  --success: #4caf50;
+  --success-light: #e8f5e9;
+  --info: #2196f3;
+  --info-light: #e3f2fd;
+  --warning: #ff9800;
+  --danger: #f44336;
+  --danger-light: #ffebee;
+  
+  --bg-page: #f8f9fa;
+  --bg-card: #ffffff;
+  --bg-header: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
+  
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-muted: #adb5bd;
+  
+  --border-light: #e9ecef;
+  --border-medium: #dee2e6;
+  
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  
+  --radius: 8px;
+  --radius-sm: 4px;
+}
+
+:host {
+  display: block;
+  background: var(--bg-page);
+  min-height: 100vh;
+  padding: 20px 30px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* =========================================
+   HEADER
+   ========================================= */
+.main-header {
+  background: var(--bg-header);
+  padding: 20px 30px;
+  border-radius: var(--radius);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  box-shadow: var(--shadow-md);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: white;
+}
+
+.logo {
+  font-size: 32px;
+  background: rgba(255,255,255,0.2);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-left h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.annee-badge {
+  background: rgba(255,255,255,0.25);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* =========================================
+   TITRE SECTION
+   ========================================= */
+.titre-section {
+  text-align: center;
+  margin-bottom: 25px;
+  padding: 20px;
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.titre-section h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* =========================================
+   INFO GÉNÉRALES
+   ========================================= */
+.info-generales {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding: 15px 20px;
+  background: white;
+  border-radius: var(--radius);
+  font-size: 13px;
+}
+
+.info-row {
+  display: flex;
+  gap: 8px;
+}
+
+.info-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.info-value {
+  color: var(--text-primary);
+}
+
+/* =========================================
+   CARDS
+   ========================================= */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 25px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-md);
+}
+
+.card-title {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--primary-light);
+}
+
+/* =========================================
+   INFO ÉVALUÉ
+   ========================================= */
+.info-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.info-item .label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.info-item .value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* =========================================
+   PÉRIODE & STATS
+   ========================================= */
+.stats-content {
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+}
+
+.stats-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.stat-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.stats-right {
+  display: flex;
+  gap: 20px;
+}
+
+.stat-box {
+  background: var(--primary-light);
+  padding: 20px;
+  border-radius: var(--radius);
+  text-align: center;
+  min-width: 150px;
+}
+
+.stat-box.highlight {
+  background: var(--success-light);
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 5px;
+}
+
+.stat-box.highlight .stat-number {
+  color: var(--success);
+}
+
+.stat-label-box {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* =========================================
+   CRITÈRES D'ÉVALUATION
+   ========================================= */
+.echelle-info {
+  background: var(--primary-light);
+  padding: 10px 15px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.criteres-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.critere-item {
+  display: grid;
+  grid-template-columns: 1fr 2fr 80px;
+  gap: 15px;
+  align-items: center;
+}
+
+.critere-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.critere-bar-container {
+  background: var(--border-medium);
+  height: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.critere-bar {
+  height: 100%;
+  border-radius: 12px;
+  transition: width 0.5s ease;
+}
+
+.critere-note {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: right;
+}
+
+.legende {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-light);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.dot.excellent { background: var(--success); }
+.dot.bon { background: var(--info); }
+.dot.moyen { background: var(--warning); }
+.dot.faible { background: var(--danger); }
+
+/* =========================================
+   GESTION EMPLOYÉS
+   ========================================= */
+.card-header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.card-header-actions .card-title {
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-export, .btn-print {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-export {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-export:hover {
+  background: var(--primary-dark);
+}
+
+.btn-print {
+  background: var(--info);
+  color: white;
+}
+
+.btn-print:hover {
+  background: #1976d2;
+}
+
+/* Stats employés */
+.stats-employes-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.stat-card-emp {
+  background: linear-gradient(135deg, var(--primary-light), white);
+  padding: 20px;
+  border-radius: var(--radius);
+  text-align: center;
+  border-left: 4px solid var(--primary);
+}
+
+.stat-emp-number {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 5px;
+}
+
+.stat-emp-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Tableau */
+.table-container {
+  margin-top: 20px;
+}
+
+.table-container h4 {
+  margin: 0 0 15px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.employes-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.employes-table th,
+.employes-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.employes-table th {
+  background: var(--bg-page);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.employes-table td {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.employe-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-small {
+  width: 32px;
+  height: 32px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* Badges */
+.badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-actif {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.badge-inactif {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+.badge-excellente {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.badge-bonne {
+  background: var(--info-light);
+  color: var(--info);
+}
+
+.badge-moyenne {
+  background: var(--primary-light);
+  color: var(--warning);
+}
+
+/* =========================================
+   FOOTER ACTIONS
+   ========================================= */
+.footer-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+  padding: 20px;
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary, .btn-primary {
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary {
+  background: var(--border-medium);
+  color: var(--text-secondary);
+}
+
+.btn-secondary:hover {
+  background: var(--text-muted);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+@media (max-width: 1024px) {
+  .stats-content {
+    flex-direction: column;
+  }
+  
+  .info-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-employes-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .critere-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  :host {
+    padding: 15px;
+  }
+  
+  .main-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .titre-section h1 {
+    font-size: 20px;
+  }
+  
+  .stats-employes-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .employes-table {
+    font-size: 12px;
+  }
+  
+  .footer-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .btn-secondary, .btn-primary {
+    width: 100%;
+  }
+}
+
+/* =========================================
+   PRINT STYLES
+   ========================================= */
+@media print {
+  .main-header, .footer-actions, .actions {
+    display: none;
+  }
+  
+  .card {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}

@@ -1,0 +1,139 @@
+<div class="page-container">
+  
+  <!-- Toolbar -->
+  <div class="toolbar no-print">
+    <button class="btn-back" (click)="retournerDashboard()">
+      ← Retour au dashboard
+    </button>
+    <div class="action-buttons">
+      <button class="btn btn-email" (click)="envoyerEmail()">📧 Email</button>
+      <button class="btn btn-download" (click)="telechargerPDF()">📥 Télécharger</button>
+      <button class="btn btn-print" (click)="imprimerAttestation()">🖨️ Imprimer</button>
+    </div>
+  </div>
+
+  <!-- Document -->
+  <div class="document" id="attestation">
+    
+    <!-- Header -->
+    <div class="doc-header">
+      <div class="header-left">
+        <h1>{{ attestation.banque.nom }}</h1>
+        <p>{{ attestation.banque.direction }}</p>
+      </div>
+      <div class="header-right">
+        <p>{{ attestation.banque.adresse }}</p>
+        <p>Tél: {{ attestation.banque.telephone }}</p>
+        <p>{{ attestation.banque.email }}</p>
+      </div>
+    </div>
+
+    <!-- Title -->
+    <div class="doc-title">
+      <h2>ATTESTATION DE SALAIRE</h2>
+      <div class="doc-meta">
+        <span>Réf: {{ attestation.reference }}</span>
+        <span>{{ attestation.lieu }}, le {{ attestation.dateEmission }}</span>
+      </div>
+    </div>
+
+    <!-- Intro -->
+    <p class="intro-text">
+      Le soussigné, Directeur des Ressources Humaines de la Banque Internationale, certifie que:
+    </p>
+
+    <!-- Employee Info -->
+    <div class="section employee-section">
+      <h3>IDENTIFICATION DE L'EMPLOYÉ</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <strong>Nom et Prénom:</strong> {{ attestation.employe.nomPrenom }}
+        </div>
+        <div class="info-item">
+          <strong>Matricule:</strong> {{ attestation.employe.matricule }}
+        </div>
+        <div class="info-item">
+          <strong>CIN:</strong> {{ attestation.employe.cin }}
+        </div>
+        <div class="info-item">
+          <strong>Fonction:</strong> {{ attestation.employe.fonction }}
+        </div>
+        <div class="info-item">
+          <strong>Département:</strong> {{ attestation.employe.departement }}
+        </div>
+        <div class="info-item">
+          <strong>Date d'embauche:</strong> {{ attestation.employe.dateEmbauche }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Salary Details -->
+    <div class="section salary-section">
+      <h3>DÉTAILS DE LA RÉMUNÉRATION MENSUELLE</h3>
+      <table class="salary-table">
+        <thead>
+          <tr>
+            <th>Composante</th>
+            <th>Montant (TND)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Salaire de base</td>
+            <td>{{ formatMontant(attestation.remuneration.salaireBase) }}</td>
+          </tr>
+          <tr>
+            <td>Prime d'ancienneté</td>
+            <td>{{ formatMontant(attestation.remuneration.primeAnciennete) }}</td>
+          </tr>
+          <tr>
+            <td>Prime de fonction</td>
+            <td>{{ formatMontant(attestation.remuneration.primeFonction) }}</td>
+          </tr>
+          <tr>
+            <td>Indemnité de transport</td>
+            <td>{{ formatMontant(attestation.remuneration.indemniteTransport) }}</td>
+          </tr>
+          <tr class="total-row">
+            <td><strong>SALAIRE BRUT MENSUEL</strong></td>
+            <td><strong>{{ formatMontant(attestation.remuneration.salaireBrut) }} TND</strong></td>
+          </tr>
+          <tr class="deduction-row">
+            <td>Retenues CNSS ({{ attestation.remuneration.tauxCNSS }}%)</td>
+            <td>{{ formatMontant(attestation.remuneration.retenueCNSS) }} TND</td>
+          </tr>
+          <tr class="net-row">
+            <td><strong>SALAIRE NET MENSUEL</strong></td>
+            <td><strong>{{ formatMontant(attestation.remuneration.salaireNet) }} TND</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer Text -->
+    <p class="footer-text">
+      Cette attestation est délivrée à l'intéressé(e) pour faire valoir ses droits auprès des organismes concernés. 
+      Les informations mentionnées ci-dessus sont exactes et conformes aux registres de paie de notre établissement.
+    </p>
+
+    <!-- Confidential -->
+    <div class="confidential">
+      <div class="confidential-badge">DOCUMENT CONFIDENTIEL</div>
+      <p>Ce document est strictement personnel et confidentiel. Toute reproduction non autorisée est interdite.</p>
+    </div>
+
+    <!-- Signature & QR -->
+    <div class="signature-section">
+      <div class="qr-code">QR</div>
+      <div class="signature">
+        <p>Le Directeur RH</p>
+      </div>
+    </div>
+
+    <!-- Document Footer -->
+    <div class="doc-footer">
+      <p>{{ attestation.banque.nom }} - Document officiel confidentiel - Ne pas divulguer</p>
+      <p>{{ attestation.banque.website }} | {{ attestation.banque.email }}</p>
+    </div>
+  </div>
+</div>

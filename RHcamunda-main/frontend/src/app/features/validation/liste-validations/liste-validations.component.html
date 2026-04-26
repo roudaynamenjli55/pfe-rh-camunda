@@ -1,0 +1,254 @@
+<div class="validation-container">
+  
+  <!-- Header -->
+  <div class="page-header">
+    <div class="breadcrumb">
+      <span (click)="retourDashboard()" class="crumb-link">Portail</span>
+      <span class="separator">›</span>
+      <span class="crumb-active">Validation Manager</span>
+    </div>
+    <h1>Validations en Attente</h1>
+    <p class="subtitle">Approuvez ou refusez les demandes de votre équipe</p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card warning">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-value">{{ stats.enAttente }}</div>
+      <div class="stat-label">En attente</div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-icon">✓</div>
+      <div class="stat-value">{{ stats.approuvees }}</div>
+      <div class="stat-label">Approuvées</div>
+    </div>
+    <div class="stat-card danger">
+      <div class="stat-icon">✗</div>
+      <div class="stat-value">{{ stats.refusees }}</div>
+      <div class="stat-label">Refusées</div>
+    </div>
+    <div class="stat-card info">
+      <div class="stat-icon">⚡</div>
+      <div class="stat-value">{{ stats.tempsTraitement }}</div>
+      <div class="stat-label">Temps moyen</div>
+    </div>
+  </div>
+
+  <!-- Filters Bar -->
+  <div class="filters-bar">
+    <div class="filter-group">
+      <label>Type</label>
+      <select [(ngModel)]="filters.type">
+        <option *ngFor="let opt of typesOptions" [value]="opt">{{ opt }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Motif</label>
+      <select [(ngModel)]="filters.motif">
+        <option *ngFor="let opt of motifsOptions" [value]="opt">{{ opt }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Statut</label>
+      <select [(ngModel)]="filters.statut">
+        <option *ngFor="let opt of statutsOptions" [value]="opt">{{ opt }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Période</label>
+      <select [(ngModel)]="filters.periode">
+        <option *ngFor="let opt of periodesOptions" [value]="opt">{{ opt }}</option>
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button class="btn-filter" (click)="appliquerFiltres()">🔍 Filtrer</button>
+      <button class="btn-reset" (click)="reinitialiserFiltres()">↺ Reset</button>
+      <button class="btn-export" (click)="exporterExcel()">📊 Excel</button>
+    </div>
+  </div>
+
+  <!-- Requests List -->
+  <div class="requests-list">
+    
+    <div class="request-card" *ngFor="let demande of demandes" [class]="getBadgeClass(demande.statut)">
+      
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="employee-info" (click)="voirProfil(demande.matricule)">
+          <div class="avatar">{{ demande.initiales }}</div>
+          <div class="employee-details">
+            <h3>{{ demande.nom }}</h3>
+            <p>{{ demande.role }} • {{ demande.matricule }}</p>
+          </div>
+        </div>
+        <div class="status-badge" [class]="getBadgeClass(demande.statut)">
+          {{ getStatutLabel(demande.statut) }}
+        </div>
+      </div>
+
+      <!-- Card Body -->
+      <div class="card-body">
+        <div class="request-meta">
+          <div class="meta-item">
+            <span class="meta-icon">{{ getTypeIcon(demande.type) }}</span>
+            <span class="meta-label">{{ demande.type }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-icon">📅</span>
+            <span class="meta-label">
+              {{ demande.dateDebut }}
+              <span *ngIf="demande.dateFin">→ {{ demande.dateFin }}</span>
+            </span>
+          </div>
+          <div class="meta-item" *ngIf="demande.duree">
+            <span class="meta-icon">⏱️</span>
+            <span class="meta-label">{{ demande.duree }}</span>
+          </div>
+          <div class="meta-item" *ngIf="demande.horaire">
+            <span class="meta-icon">🕐</span>
+            <span class="meta-label">{{ demande.horaire }}</span>
+          </div>
+        </div>
+
+        <div class="request-motif">
+          <strong>Motif :</strong> {{ demande.motif }}
+        </div>
+
+        <div class="request-footer">
+          <span class="submission-date">Soumis le {{ demande.dateSoumission }}</span>
+          <span *ngIf="demande.justificatif" class="badge-justificatif">📎 Justificatif joint</span>
+        </div>
+
+        <!-- Progress Timeline -->
+        <div class="progress-timeline" *ngIf="demande.progression">
+          <div class="progress-steps">
+            <ng-container *ngFor="let step of demande.progression; let i = index">
+              <div class="progress-step">
+                <div class="step-circle" [class]="getProgressClass(i, demande.etapeActuelle)">
+                  <span *ngIf="i < (demande.etapeActuelle ?? 0)">✓</span>
+                  <span *ngIf="i === demande.etapeActuelle">●</span>
+                </div>
+                <span class="step-label">{{ step }}</span>
+              </div>
+              <div class="step-connector" *ngIf="i < demande.progression.length - 1" 
+                   [class.completed]="i < (demande.etapeActuelle ?? 0)"></div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Actions -->
+      <div class="card-actions">
+        <button class="btn-action btn-details" (click)="voirDetails(demande)">
+          👁️ Détails
+        </button>
+        <button *ngIf="demande.justificatif" class="btn-action btn-attachment" 
+                (click)="telechargerJustificatif(demande)">
+          📎 Justificatif
+        </button>
+        <div class="action-separator"></div>
+        <button class="btn-action btn-refuse" (click)="ouvrirRefus(demande)">
+          ✗ Refuser
+        </button>
+        <button class="btn-action btn-approve" (click)="approuver(demande)">
+          ✓ Approuver
+        </button>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="demandes.length === 0">
+      <div class="empty-icon">🎉</div>
+      <h3>Toutes les demandes ont été traitées !</h3>
+      <p>Aucune validation en attente pour le moment.</p>
+    </div>
+  </div>
+
+  <!-- Refuse Modal -->
+  <div class="modal-overlay" *ngIf="showRefuseModal" (click)="fermerModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>❌ Refuser la demande</h3>
+        <button class="modal-close" (click)="fermerModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>Vous êtes sur le point de refuser la demande de <strong>{{ selectedDemande?.nom }}</strong></p>
+        <div class="form-group">
+          <label>Motif du refus *</label>
+          <textarea [(ngModel)]="motifRefus" rows="4" 
+                    placeholder="Expliquez la raison du refus..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="fermerModal()">Annuler</button>
+        <button class="btn-confirm-refuse" (click)="confirmerRefus()" 
+                [disabled]="!motifRefus.trim()">
+          Confirmer le refus
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Details Modal -->
+  <div class="modal-overlay" *ngIf="showDetailsModal" (click)="fermerModal()">
+    <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>📋 Détails de la demande #{{ selectedDemande?.id }}</h3>
+        <button class="modal-close" (click)="fermerModal()">✕</button>
+      </div>
+      <div class="modal-body" *ngIf="selectedDemande">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>Employé</label>
+            <span>{{ selectedDemande.nom }} ({{ selectedDemande.matricule }})</span>
+          </div>
+          <div class="detail-item">
+            <label>Fonction</label>
+            <span>{{ selectedDemande.role }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Type</label>
+            <span>{{ selectedDemande.type }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Statut</label>
+            <span [class]="getBadgeClass(selectedDemande.statut)">
+              {{ getStatutLabel(selectedDemande.statut) }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <label>Date de début</label>
+            <span>{{ selectedDemande.dateDebut }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedDemande.dateFin">
+            <label>Date de fin</label>
+            <span>{{ selectedDemande.dateFin }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedDemande.duree">
+            <label>Durée</label>
+            <span>{{ selectedDemande.duree }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Date de soumission</label>
+            <span>{{ selectedDemande.dateSoumission }}</span>
+          </div>
+        </div>
+        <div class="detail-section">
+          <label>Motif complet</label>
+          <p class="motif-text">{{ selectedDemande.motif }}</p>
+        </div>
+        <div *ngIf="selectedDemande.justificatif" class="detail-section">
+          <label>Justificatif</label>
+          <button class="btn-download" (click)="telechargerJustificatif(selectedDemande!)">
+            📥 Télécharger le justificatif
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="fermerModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+</div>

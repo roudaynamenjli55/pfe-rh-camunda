@@ -1,0 +1,154 @@
+<div class="nouvelle-demande-container">
+  
+  <!-- 1. HEADER ORANGE -->
+  <div class="page-header">
+    <button class="btn-back" (click)="onCancel()">← Retour au dashboard</button>
+    <h1>Nouvelle Demande de Congé</h1>
+    <p>Remplissez le formulaire ci-dessous pour soumettre votre demande</p>
+    
+    <div class="solde-badge">
+      ✓ Solde disponible : 22 jours
+    </div>
+  </div>
+
+  <form [formGroup]="congeForm" (ngSubmit)="onSubmit()">
+    
+    <!-- 2. TYPE DE CONGÉ -->
+    <div class="form-section">
+      <h3 class="section-title">
+        <span class="icon-box">📅</span>
+        Type de congé
+      </h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Type de congé *</label>
+          <select formControlName="typeConge" [class.is-invalid]="f['typeConge'].invalid && f['typeConge'].touched">
+            <option value="" disabled>Sélectionnez un type</option>
+            <option *ngFor="let type of typesConge" [value]="type">{{ type }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Motif *</label>
+          <select formControlName="motif" [class.is-invalid]="f['motif'].invalid && f['motif'].touched">
+            <option value="" disabled>Sélectionnez un motif</option>
+            <option *ngFor="let m of motifs" [value]="m">{{ m }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. PÉRIODE DE CONGÉ -->
+    <div class="form-section">
+      <h3 class="section-title">
+        <span class="icon-box">🕒</span>
+        Période de congé
+      </h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date de début *</label>
+          <input type="date" formControlName="dateDebut" [class.is-invalid]="f['dateDebut'].invalid && f['dateDebut'].touched">
+        </div>
+        <div class="form-group">
+          <label>Date de fin *</label>
+          <input type="date" formControlName="dateFin" [class.is-invalid]="f['dateFin'].invalid && f['dateFin'].touched">
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. RÉSUMÉ CALCUL (Boîte grise) -->
+    <div class="summary-box" *ngIf="joursCalendaires > 0 || joursOuvrables > 0">
+      <div class="summary-row">
+        <span>Date de début</span>
+        <strong>{{ formatDateLong(f['dateDebut'].value) }}</strong>
+      </div>
+      <div class="summary-row">
+        <span>Date de fin</span>
+        <strong>{{ formatDateLong(f['dateFin'].value) }}</strong>
+      </div>
+      <div class="summary-row">
+        <span>Jours ouvrables</span>
+        <strong class="highlight">{{ joursOuvrables }} jours</strong>
+      </div>
+      <div class="summary-separator"></div>
+      <div class="summary-row total">
+        <span>TOTAL</span>
+        <strong>{{ joursCalendaires }} jours calendaires</strong>
+      </div>
+    </div>
+
+    <!-- 5. INFOS IMPORTANTES -->
+    <div class="info-alert">
+      <span class="info-icon">⚠️</span>
+      <div class="info-content">
+        <strong>Informations importantes</strong>
+        <p>Les week-ends et jours fériés ne sont pas comptabilisés dans le calcul. Votre demande sera soumise à validation de votre responsable hiérarchique.</p>
+      </div>
+    </div>
+
+    <!-- 6. DÉTAILS SUPPLÉMENTAIRES -->
+    <div class="form-section">
+      <h3 class="section-title">
+        <span class="icon-box">📄</span>
+        Détails supplémentaires
+      </h3>
+      <div class="form-group">
+        <label>Commentaire / Justification</label>
+        <textarea formControlName="commentaire" rows="3" placeholder="Ajoutez des informations complémentaires concernant votre demande..."></textarea>
+      </div>
+    </div>
+
+    <!-- 7. COORDONNÉES ET JUSTIFICATIF -->
+    <div class="form-section">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Adresse pendant le congé</label>
+          <div class="input-with-icon">
+            <span class="input-icon">📍</span>
+            <input type="text" formControlName="adresseConge" placeholder="&">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Téléphone de contact</label>
+          <div class="input-with-icon">
+            <span class="input-icon">📞</span>
+            <input type="tel" formControlName="telephone" placeholder="+216 XX XXX XXX">
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload Zone -->
+      <div class="form-group upload-section">
+        <label class="upload-label">
+          <span class="icon-box-small">✓</span> Justificatif (si requis)
+        </label>
+        <div class="upload-area" (click)="fileInput.click()">
+          <div class="upload-icon">⬆️</div>
+          <p class="upload-text">Cliquez pour télécharger un fichier</p>
+          <p class="upload-hint" *ngIf="!fileName">PDF, JPG, PNG - Maximum 5 Mo</p>
+          <p class="upload-filename" *ngIf="fileName">{{ fileName }}</p>
+        </div>
+        <input #fileInput type="file" hidden accept=".pdf,.jpg,.jpeg,.png" (change)="onFileChange($event)">
+      </div>
+
+      <!-- Certification -->
+      <div class="certification-wrapper">
+        <label class="checkbox-custom">
+          <input type="checkbox" formControlName="certifie">
+          <span class="checkmark"></span>
+          <span>Je certifie que les informations fournies sont exactes et complètes</span>
+        </label>
+        <div class="error-msg" *ngIf="f['certifie'].invalid && f['certifie'].touched">
+          Vous devez cocher cette case pour soumettre.
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. BOUTONS FOOTER -->
+    <div class="form-actions-footer">
+      <button type="button" class="btn-cancel" (click)="onCancel()">✕ Annuler</button>
+      <button type="button" class="btn-draft" (click)="onSaveDraft()">💾 Sauvegarder brouillon</button>
+      <button type="submit" class="btn-submit">✓ Soumettre la demande</button>
+    </div>
+
+  </form>
+</div>

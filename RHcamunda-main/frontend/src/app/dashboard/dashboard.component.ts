@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UserService, User } from '../core/services/user.service';
-import { KeycloakService } from '../core/services/keycloak.service';
+import { UserService, User } from '../../core/services/user.service';
+import { KeycloakService } from '../../core/services/keycloak.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -45,11 +45,11 @@ export class DashboardComponent implements OnInit {
 
   loadUsers(): void {
     this.userService.getUsers().subscribe({
-      next: (data) => {
+      next: (data: User[]) => {
         this.users = data;
         console.log('✅ Users loaded:', data);
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('❌ Error loading users:', err);
       }
     });

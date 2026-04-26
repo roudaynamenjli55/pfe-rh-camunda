@@ -1,0 +1,209 @@
+<div class="evaluation-container">
+  
+  <!-- Header -->
+  <div class="main-header">
+    <div class="header-left">
+      <div class="logo">📊</div>
+      <div>
+        <h2>Évaluation des Performances</h2>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="annee-badge">Année {{ annee }}</span>
+    </div>
+  </div>
+
+  <!-- Titre Principal -->
+  <div class="titre-section">
+    <h1>FICHE D'ÉVALUATION ANNUELLE</h1>
+  </div>
+
+  <!-- Informations générales -->
+  <div class="info-generales">
+    <div class="info-row">
+      <span class="info-label">Référence :</span>
+      <span class="info-value">{{ reference }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Date d'évaluation :</span>
+      <span class="info-value">{{ dateEvaluation }}</span>
+    </div>
+  </div>
+
+  <!-- Informations de l'évalué -->
+  <div class="card info-evalue">
+    <h3 class="card-title">INFORMATIONS DE L'ÉVALUÉ(E)</h3>
+    <div class="info-grid-2">
+      <div class="info-item">
+        <span class="label">Nom et Prénom :</span>
+        <span class="value">{{ evalue.nomPrenom }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Département :</span>
+        <span class="value">{{ evalue.departement }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Matricule :</span>
+        <span class="value">{{ evalue.matricule }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Ancienneté :</span>
+        <span class="value">{{ evalue.anciennete }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Fonction :</span>
+        <span class="value">{{ evalue.fonction }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Évaluateur :</span>
+        <span class="value">{{ evalue.evaluateur }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Période d'évaluation et statistiques -->
+  <div class="card periode-stats">
+    <h3 class="card-title">PÉRIODE D'ÉVALUATION ET STATISTIQUES</h3>
+    
+    <div class="stats-content">
+      <div class="stats-left">
+        <div class="stat-item">
+          <span class="stat-label">Période évaluée :</span>
+          <span class="stat-value">{{ periodeEval.dateDebut }} - {{ periodeEval.dateFin }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Congés pris :</span>
+          <span class="stat-value">
+            {{ periodeEval.congesPris }} jours (Annuel: {{ periodeEval.congesAnnuel }}, 
+            Maladie: {{ periodeEval.congesMaladie }}, 
+            Personnel: {{ periodeEval.congesPersonnels }})
+          </span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Autorisations :</span>
+          <span class="stat-value">{{ periodeEval.detailsAutorisations }}</span>
+        </div>
+      </div>
+      
+      <div class="stats-right">
+        <div class="stat-box">
+          <div class="stat-number">{{ periodeEval.joursTravailles }} jours / {{ periodeEval.totalJours }}</div>
+          <div class="stat-label-box">Jours travaillés</div>
+        </div>
+        <div class="stat-box highlight">
+          <div class="stat-number">{{ periodeEval.tauxPresence }}%</div>
+          <div class="stat-label-box">Taux présence</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Critères d'évaluation -->
+  <div class="card criteres-section">
+    <h3 class="card-title">CRITÈRES D'ÉVALUATION</h3>
+    
+    <div class="echelle-info">
+      <span>Échelle : 5 (Excellent) | 4 - Acceptable | 3 - Bon | 2 - Très Bon | 1 - À Améliorer</span>
+    </div>
+
+    <div class="criteres-list">
+      <div class="critere-item" *ngFor="let critere of criteres">
+        <div class="critere-label">{{ critere.nom }}</div>
+        <div class="critere-bar-container">
+          <div class="critere-bar" 
+               [style.width.%]="getNotePercentage(critere.note, critere.maxNote)"
+               [style.background]="getNoteColor(critere.note)">
+          </div>
+        </div>
+        <div class="critere-note">{{ critere.note }}/{{ critere.maxNote }}</div>
+      </div>
+    </div>
+
+    <div class="legende">
+      <span class="legend-item"><span class="dot excellent"></span> Excellent</span>
+      <span class="legend-item"><span class="dot bon"></span> Très satisfaisant</span>
+      <span class="legend-item"><span class="dot moyen"></span> Moyen</span>
+      <span class="legend-item"><span class="dot faible"></span> À améliorer</span>
+    </div>
+  </div>
+
+  <!-- Gestion des Employés -->
+  <div class="card gestion-employes">
+    <div class="card-header-actions">
+      <h3 class="card-title">Gestion des Employés</h3>
+      <div class="actions">
+        <button class="btn-export" (click)="exporterPDF()">📥 Exporter</button>
+        <button class="btn-print" (click)="imprimerFiche()">🖨️ Imprimer Fiche</button>
+      </div>
+    </div>
+
+    <!-- Stats rapides -->
+    <div class="stats-employes-grid">
+      <div class="stat-card-emp">
+        <div class="stat-emp-number">{{ statsEmployes.total }}</div>
+        <div class="stat-emp-label">Total employés</div>
+      </div>
+      <div class="stat-card-emp">
+        <div class="stat-emp-number">{{ statsEmployes.actifs }}</div>
+        <div class="stat-emp-label">Employés actifs</div>
+      </div>
+      <div class="stat-card-emp">
+        <div class="stat-emp-number">{{ statsEmployes.nouveaux }}</div>
+        <div class="stat-emp-label">Nouveaux employés</div>
+      </div>
+      <div class="stat-card-emp">
+        <div class="stat-emp-number">{{ statsEmployes.departements }}</div>
+        <div class="stat-emp-label">Total départements</div>
+      </div>
+    </div>
+
+    <!-- Tableau employés -->
+    <div class="table-container">
+      <h4>Liste des employés</h4>
+      <table class="employes-table">
+        <thead>
+          <tr>
+            <th>Employé</th>
+            <th>Matricule</th>
+            <th>Département</th>
+            <th>Fonction</th>
+            <th>Date d'embauche</th>
+            <th>Statut</th>
+            <th>Performance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let emp of employes">
+            <td>
+              <div class="employe-cell">
+                <div class="avatar-small">{{ emp.nom.charAt(0) }}</div>
+                <span>{{ emp.nom }}</span>
+              </div>
+            </td>
+            <td>{{ emp.matricule }}</td>
+            <td>{{ emp.departement }}</td>
+            <td>{{ emp.fonction }}</td>
+            <td>{{ emp.dateEmbauche }}</td>
+            <td>
+              <span class="badge" [ngClass]="getStatutBadgeClass(emp.statut)">
+                {{ emp.statut === 'actif' ? '✓ Actif' : '✗ Inactif' }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="getPerformanceBadgeClass(emp.performance)">
+                {{ emp.performance | titlecase }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Footer actions -->
+  <div class="footer-actions">
+    <button class="btn-secondary" (click)="retourDashboard()">← Retour au dashboard</button>
+    <button class="btn-primary" (click)="exporterPDF()">📥 Télécharger PDF</button>
+  </div>
+
+</div>
