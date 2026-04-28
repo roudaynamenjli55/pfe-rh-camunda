@@ -8,6 +8,7 @@ import org.example.rhcamunda.dto.conge.CongeResponse;
 import org.example.rhcamunda.dto.conge.CongeDTO;
 import org.example.rhcamunda.service.CongeService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +29,7 @@ public class CongeController {
      * ✅ Logique déléguée à CongeService
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('EMPLOYE', 'CHEF_HIERARCHIQUE', 'RH', 'ADMIN')")
     public ResponseEntity<CongeResponse> creerMaDemande(@RequestBody @Valid CongeRequest request) {
         log.info("📝 Nouvelle demande de congé reçue");
 
@@ -43,6 +45,7 @@ public class CongeController {
      * ✅ Récupération automatique depuis le JWT
      */
     @GetMapping("/my-conges")
+    @PreAuthorize("hasAnyRole('EMPLOYE', 'CHEF_HIERARCHIQUE', 'RH', 'ADMIN')")
     public ResponseEntity<List<CongeDTO>> getMyConges() {
         log.info("📋 Récupération de mes congés");
         return ResponseEntity.ok(congeService.getMyConges());
@@ -52,6 +55,7 @@ public class CongeController {
      * 🔹 OBTENIR MES CONGÉS EN ATTENTE
      */
     @GetMapping("/my-conges/en-attente")
+    @PreAuthorize("hasAnyRole('EMPLOYE', 'CHEF_HIERARCHIQUE', 'RH', 'ADMIN')")
     public ResponseEntity<List<CongeDTO>> getMyCongesEnAttente() {
         return ResponseEntity.ok(congeService.getMyCongesEnAttente());
     }
@@ -61,6 +65,7 @@ public class CongeController {
      * ✅ Lecture temps réel depuis PostgreSQL
      */
     @GetMapping("/my-solde")
+    @PreAuthorize("hasAnyRole('EMPLOYE', 'CHEF_HIERARCHIQUE', 'RH', 'ADMIN')")
     public ResponseEntity<Double> getMySoldeConge() {
         return ResponseEntity.ok(congeService.getMySoldeConge());
     }
@@ -70,6 +75,7 @@ public class CongeController {
      * ✅ Récupère automatiquement les employés sous sa responsabilité
      */
     @GetMapping("/validation/en-attente")
+    @PreAuthorize("hasAnyRole('CHEF_HIERARCHIQUE', 'RH', 'ADMIN')")
     public ResponseEntity<List<CongeDTO>> getCongesEnAttenteValidation() {
         log.info("🔍 Récupération des congés en attente pour validation");
         return ResponseEntity.ok(congeService.getCongesEnAttenteValidation());
@@ -79,6 +85,7 @@ public class CongeController {
      * 🔹 APPROUVER UN CONGÉ (Workflow)
      */
     @PostMapping("/{id}/approve")
+    @PreAuthorize("hasAnyRole('CHEF_HIERARCHIQUE', 'RH', 'ADMIN')")
     public ResponseEntity<Void> approve(@PathVariable Long id) {
         log.info("✅ Approbation congé ID: {}", id);
         congeService.approuverConge(id);
@@ -89,6 +96,7 @@ public class CongeController {
      * 🔹 REFUSER UN CONGÉ (Workflow)
      */
     @PostMapping("/{id}/reject")
+    @PreAuthorize("hasAnyRole('CHEF_HIERARCHIQUE', 'RH', 'ADMIN')")
     public ResponseEntity<Void> reject(@PathVariable Long id, @RequestParam String motif) {
         log.info("❌ Refus congé ID: {}, motif: {}", id, motif);
         congeService.refuserConge(id, motif);
@@ -100,6 +108,7 @@ public class CongeController {
      * ✅ Vérification automatique que c'est bien mon congé
      */
     @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('EMPLOYE', 'CHEF_HIERARCHIQUE', 'RH', 'ADMIN')")
     public ResponseEntity<Void> cancel(@PathVariable Long id) {
         log.info("🔄 Annulation congé ID: {}", id);
         congeService.annulerMonConge(id);
@@ -110,6 +119,7 @@ public class CongeController {
      * 🔹 OBTENIR UN CONGÉ PAR ID
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('EMPLOYE', 'CHEF_HIERARCHIQUE', 'RH', 'ADMIN')")
     public ResponseEntity<CongeDTO> getConge(@PathVariable Long id) {
         return ResponseEntity.ok(congeService.getCongeById(id));
     }
@@ -118,6 +128,7 @@ public class CongeController {
      * 🔹 EXPORT EXCEL DE MES CONGÉS
      */
     @GetMapping("/export/excel")
+    @PreAuthorize("hasAnyRole('EMPLOYE', 'CHEF_HIERARCHIQUE', 'RH', 'ADMIN')")
     public ResponseEntity<byte[]> exportMyCongesExcel() {
         // À implémenter avec ExcelExportService
         return ResponseEntity.ok().build();

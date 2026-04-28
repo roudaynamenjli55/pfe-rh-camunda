@@ -9,6 +9,7 @@ import org.example.rhcamunda.dto.conge.CongeRequest;
 import org.example.rhcamunda.dto.conge.CongeResponse;
 import org.example.rhcamunda.entity.Conge;
 import org.example.rhcamunda.entity.Employe;
+import org.example.rhcamunda.entity.TypeCongeParametre;
 import org.example.rhcamunda.repository.CongeRepository;
 import org.example.rhcamunda.repository.EmployeRepository;
 import org.example.rhcamunda.util.UserContext;
@@ -34,6 +35,7 @@ public class CongeService {
     private final RuntimeService runtimeService;
     private final NotificationService notificationService;
     private final UserContext userContext;
+    private final TypeCongeParametreService typeCongeParametreService;
 
     /**
      * Créer une demande de congé - 100% Dynamique
@@ -48,8 +50,15 @@ public class CongeService {
         // Calcul dynamique des jours
         long nbjours = ChronoUnit.DAYS.between(request.getDateDebut(), request.getDateFin()) + 1;
 
-        // Vérification solde
-        if (employe.getSoldeConge() < nbjours) {
+        // Récupérer le type de congé dynamiquement
+        TypeCongeParametre typeParam = typeCongeParametreService.getTypeCode(request.getTypeConge());
+
+        if (typeParam.getJoursMaxParAn() != null && nbjours > typeParam.getJoursMaxParAn()) {
+            throw new RuntimeException("La durée dépasse le maximum autorisé pour ce type de congé (" + typeParam.getJoursMaxParAn() + " jours)");
+        }
+
+        // Vérification solde si déductible
+        if (typeParam.getDeductibleSolde() && employe.getSoldeConge() < nbjours) {
             throw new RuntimeException(
                     String.format("Solde insuffisant. Disponible: %.1f, Demandé: %d",
                             employe.getSoldeConge(), nbjours)
@@ -195,10 +204,17 @@ public class CongeService {
         Conge conge = congeRepository.findById(congeId)
                 .orElseThrow(() -> new RuntimeException("Congé non trouvé"));
 
-        conge.approuver();
+        TypeCongeParametre typeParam = typeCongeParametreService.getTypeCode(conge.getTypeConge());
+
+        if (typeParam.getDeductibleSolde()) {
+            conge.approuver(); // qui appelle deduireSolde
+        } else {
+            // Approuver sans déduire le solde
+            conge.approuverSansDeduction();
+        }
 
         Employe employe = conge.getEmploye();
-        employeRepository.save(employe); // Solde déjà déduit dans approuver()
+        employeRepository.save(employe);
 
         congeRepository.save(conge);
 
@@ -300,5 +316,31 @@ public class CongeService {
                         ? employe.getSoldeConge()
                         : null)
                 .build();
+    }
+    // =================================================================
+// 🔹 CHATBOT : Soldes par type pour l'employé connecté
+// =================================================================
+
+    @Transactional(readOnly = true)
+    public Map<String, Integer> getSoldesParType(Long employeId) {
+        Employe employe = employeRepository.findById(employeId)
+                .orElseThrow(() -> new RuntimeException("Employé non trouvé: " + employeId));
+
+        Map<String, Integer> soldes = new HashMap<>();
+        // Ton entité stocke un solde global — on le répartit par type
+        int soldeGlobal = employe.getSoldeConge() != null
+                ? employe.getSoldeConge().intValue()
+                : 0;
+        soldes.put("ANNUEL", soldeGlobal);
+        soldes.put("MALADIE", 15);   // valeur fixe réglementaire
+        soldes.put("AUTRE", 5);      // valeur fixe réglementaire
+        return soldes;
+    }
+
+    @Transactional(readOnly = true)
+    public int getCongesConsommesAnnee(Long employeId, int annee) {
+        // ✅ Utilise la query déjà existante dans CongeRepository
+        Integer total = congeRepository.sumJoursConsommesByEmployeAndYear(employeId, annee);
+        return total != null ? total : 0;
     }
 }

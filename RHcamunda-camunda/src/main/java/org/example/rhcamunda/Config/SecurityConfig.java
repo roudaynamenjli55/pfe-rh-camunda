@@ -62,7 +62,9 @@ public class SecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
-
+// Dans ta méthode securityFilterChain, ajoute :
+                                .requestMatchers("/api/v1/chatbot/health").permitAll()
+                                .requestMatchers("/api/v1/chatbot/**").hasAnyRole("EMPLOYE", "RH", "ADMIN", "CHEF")
                         // 🎭 CAMUNDA
                         .requestMatchers(new AntPathRequestMatcher("/camunda/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/engine-rest/**")).permitAll()
@@ -85,6 +87,7 @@ public class SecurityConfig {
                 );
 
         return http.build();
+
     }
 
     // ==================== CORS CONFIGURATION ====================

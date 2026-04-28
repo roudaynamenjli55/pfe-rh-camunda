@@ -22,7 +22,7 @@ public interface CongeRepository extends JpaRepository<Conge, Long> {
 
     List<Conge> findByEmployeIdAndStatut(Long employeId, String statut);
 
-    @Query("SELECT c FROM Conge c WHERE c.employe.id = :employeId AND c.dateDebut BETWEEN :debut AND :fin")
+    @Query("SELECT c FROM Conge c JOIN FETCH c.employe WHERE c.employe.id = :employeId AND c.dateDebut BETWEEN :debut AND :fin")
     List<Conge> findByEmployeIdAndDateBetween(@Param("employeId") Long employeId,
                                               @Param("debut") LocalDate debut,
                                               @Param("fin") LocalDate fin);
@@ -41,7 +41,7 @@ public interface CongeRepository extends JpaRepository<Conge, Long> {
             @Param("fin") LocalDate fin,
             @Param("statut") String statut);
 
-    @Query("SELECT c FROM Conge c " +
+    @Query("SELECT c FROM Conge c JOIN FETCH c.employe " +
             "WHERE c.employe.matricule = :matricule " +
             "AND c.dateDebut BETWEEN :debut AND :fin " +
             "AND c.statut = :statut")
@@ -63,7 +63,7 @@ public interface CongeRepository extends JpaRepository<Conge, Long> {
 
     List<Conge> findByStatut(String statut);
 
-    @Query("SELECT c FROM Conge c WHERE c.employe.chefHierarchique.matricule = :matriculeChef AND c.statut = :statut")
+    @Query("SELECT c FROM Conge c JOIN FETCH c.employe WHERE c.employe.chefHierarchique.matricule = :matriculeChef AND c.statut = :statut")
     List<Conge> findByChefMatriculeAndStatut(@Param("matriculeChef") String matriculeChef,
                                              @Param("statut") String statut);
 
@@ -114,7 +114,7 @@ public interface CongeRepository extends JpaRepository<Conge, Long> {
     // 🔹 EXPORT & RAPPORTS
     // ========================================================================
 
-    @Query("SELECT c FROM Conge c " +
+    @Query("SELECT c FROM Conge c JOIN FETCH c.employe " +
             "WHERE c.statut = 'APPROUVE' " +
             "AND FUNCTION('DATE_TRUNC', 'month', c.dateDebut) = :mois " +
             "ORDER BY c.dateDebut DESC")

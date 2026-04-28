@@ -48,6 +48,9 @@ public class Demande {
 
     private String cheminPdf; // Pour stocker le chemin du PDF généré
 
+    @Column(name = "process_instance_id")
+    private String processInstanceId; // Lien avec Camunda
+
     @UpdateTimestamp
     private LocalDateTime dateModification;
 

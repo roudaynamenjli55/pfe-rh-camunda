@@ -4,16 +4,12 @@ server:
 # --- Configuration Camunda BPM ---
 camunda:
   bpm:
-    # Type de base de données pour Camunda
     database:
       type: postgres
-    # Création automatique du filtre utilisateur admin
     filter:
       create: All
-    # Exécution des jobs (processus asynchrones)
     generic-properties:
       job-execution-enabled: true
-    # Compte administrateur Camunda par défaut
     admin-user:
       id: admin
       password: admin
@@ -23,51 +19,62 @@ camunda:
     deployment:
       resource-pattern: classpath*:processes/*.bpmn
 
-# --- Configuration Spring Boot & PostgreSQL ---
+# --- Configuration Spring Boot ---
 spring:
   datasource:
-    # URL de connexion à ta base PostgreSQL
     url: jdbc:postgresql://localhost:5432/sirhdb
-    # Pilote JDBC pour PostgreSQL
     driver-class-name: org.postgresql.Driver
-    # Tes identifiants PostgreSQL
     username: postgres
     password: 1234
 
   jpa:
     hibernate:
-      # Mettre à jour le schéma automatiquement (crée les tables si elles n'existent pas)
       ddl-auto: update
-    # Afficher les requêtes SQL dans la console pour le débogage
     show-sql: true
-    # Dialecte spécifique à PostgreSQL
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
       hibernate:
         format_sql: true
 
-  # Désactivation de la console H2 (car on utilise Postgres)
   h2:
     console:
       enabled: false
 
-  # --- Configuration Sécurité OAuth2 / Keycloak ---
+  # --- Sécurité OAuth2 / Keycloak ---
   security:
     oauth2:
       resourceserver:
         jwt:
-          # L'URL de ton Realm Keycloak (PFEE-REALM)
           issuer-uri: http://localhost:8080/realms/rhcamunda-realm
           jwk-set-uri: http://localhost:8080/realms/rhcamunda-realm/protocol/openid-connect/certs
-# --- Configuration des Logs ---
+
+  # --- Spring AI (Chatbot RH via OpenRouter) ---
+  ai:
+    openai:
+      api-key: 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 # Variable d'env — jamais en clair dans les sources
+      base-url: https://openrouter.ai/api/v1
+      chat:
+        options:
+          model: openai/gpt-4o-mini        # Bon rapport qualité/prix pour usage interne
+          temperature: 0.3
+          max-tokens: 1000
+
+  # --- Redis (historique de conversation chatbot) ---
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+# --- Logs ---
 logging:
   level:
     root: INFO
     org.springframework.boot: INFO
     org.springframework.security: DEBUG
-    org.camunda: DEBUG
-    org.hibernate.SQL: DEBUG       # Voir les requêtes SQL générées
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE # Voir les valeurs des paramètres
-    org.camunda.bpm.engine: DEBUG
-    org.camunda.bpm.engine.cfg: DEBUG
-    org.camunda.bpm.engine.impl: DEBUG
+    org.springframework.ai: INFO
+    org.example.rhcamunda.service.chatbot: DEBUG
+    org.camunda: WARN
+    org.camunda.bpm.engine: WARN
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

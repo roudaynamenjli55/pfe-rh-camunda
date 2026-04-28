@@ -9,6 +9,7 @@ import org.example.rhcamunda.dto.autorisation.AutorisationRequestDto;
 import org.example.rhcamunda.dto.autorisation.ValidationRequestDto;
 import org.example.rhcamunda.service.AutorisationService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +35,7 @@ public class AutorisationController {
     // =================================================================
 
     @PostMapping("/demander")
+    @PreAuthorize("hasAnyRole('EMPLOYE', 'CHEF_HIERARCHIQUE', 'RH', 'ADMIN')")
     public ResponseEntity<?> demander(
             @RequestBody AutorisationRequestDto request,
             @AuthenticationPrincipal Jwt jwt) {
@@ -85,6 +87,7 @@ public class AutorisationController {
     // =================================================================
 
     @GetMapping("/taches")
+    @PreAuthorize("hasAnyRole('EMPLOYE', 'CHEF_HIERARCHIQUE', 'RH', 'ADMIN')")
     public ResponseEntity<?> listerTaches(
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam(required = false) String statut) {
@@ -117,6 +120,7 @@ public class AutorisationController {
     // =================================================================
 
     @PostMapping("/taches/{taskId}/valider")
+    @PreAuthorize("hasAnyRole('CHEF_HIERARCHIQUE', 'RH', 'ADMIN')")
     public ResponseEntity<?> validerTache(
             @PathVariable String taskId,
             @RequestBody ValidationRequestDto validation,
@@ -155,6 +159,7 @@ public class AutorisationController {
     // =================================================================
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('EMPLOYE', 'CHEF_HIERARCHIQUE', 'RH', 'ADMIN')")
     public ResponseEntity<?> getDetails(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
         String matricule = jwt.getClaimAsString("preferred_username");
         String role = jwt.getClaimAsString("role");
@@ -175,6 +180,7 @@ public class AutorisationController {
     // =================================================================
 
     @GetMapping("/historique")
+    @PreAuthorize("hasAnyRole('EMPLOYE', 'CHEF_HIERARCHIQUE', 'RH', 'ADMIN')")
     public ResponseEntity<?> getHistorique(
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam(required = false) LocalDate debut,
@@ -195,6 +201,7 @@ public class AutorisationController {
     // =================================================================
 
     @GetMapping("/stats")
+    @PreAuthorize("hasAnyRole('RH', 'ADMIN')")
     public ResponseEntity<?> getStats(
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam(required = false) Integer mois,

@@ -160,6 +160,18 @@ public class Conge {
     }
 
     /**
+     * Approuve le congé sans déduire le solde (ex: maladie)
+     */
+    public void approuverSansDeduction() {
+        if (this.statut != StatutConge.EN_ATTENTE) {
+            throw new IllegalStateException("Congé déjà traité");
+        }
+        this.statut = StatutConge.APPROUVE;
+        this.dateValidation = LocalDateTime.now();
+        this.validations++;
+    }
+
+    /**
      * Refuse le congé
      */
     public void refuser(String motifRefus) {

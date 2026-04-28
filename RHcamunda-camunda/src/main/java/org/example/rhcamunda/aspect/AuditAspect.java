@@ -49,6 +49,9 @@ public class AuditAspect {
     @Before("serviceLayer() && crudOperations()")
     public void captureBeforeState(JoinPoint joinPoint) {
         try {
+            // Guard: ignorer si pas de contexte HTTP (appel système)
+            if (getCurrentRequest() == null) return;
+
             String methodName = joinPoint.getSignature().getName();
             LogAction.ActionType action = determineActionType(methodName);
 
@@ -84,8 +87,21 @@ public class AuditAspect {
     // ✅ Méthode principale de logging
     private void logAction(JoinPoint joinPoint, Object result, boolean success, String errorMessage) {
         try {
+            // ✅ GUARD: Ignorer si pas de contexte HTTP (ex: DataInitializer au démarrage)
             HttpServletRequest request = getCurrentRequest();
-            String matricule = userContext.getCurrentUserMatricule();
+            if (request == null) {
+                log.debug("⏭️ Audit ignoré - pas de contexte HTTP (appel système)");
+                return;
+            }
+
+            // ✅ GUARD: Ignorer si pas d'utilisateur authentifié
+            String matricule;
+            try {
+                matricule = userContext.getCurrentUserMatricule();
+            } catch (Exception e) {
+                log.debug("⏭️ Audit ignoré - pas d'utilisateur authentifié: {}", e.getMessage());
+                return;
+            }
 
             String methodName = joinPoint.getSignature().getName();
             String className = joinPoint.getTarget().getClass().getSimpleName();
@@ -111,10 +127,10 @@ public class AuditAspect {
                     .ancienValeur(ancienEtat)
                     .nouvelleValeur(nouvelEtat)
                     .details(buildDetails(joinPoint, result))
-                    .ipAddress(request != null ? request.getRemoteAddr() : null)
-                    .userAgent(request != null ? request.getHeader("User-Agent") : null)
-                    .endpoint(request != null ? request.getRequestURI() : null)
-                    .httpMethod(request != null ? request.getMethod() : null)
+                    .ipAddress(request.getRemoteAddr())
+                    .userAgent(request.getHeader("User-Agent"))
+                    .endpoint(request.getRequestURI())
+                    .httpMethod(request.getMethod())
                     .success(success)
                     .errorMessage(errorMessage)
                     .timestamp(LocalDateTime.now())
@@ -129,7 +145,7 @@ public class AuditAspect {
             }
 
         } catch (Exception e) {
-            log.error("Erreur lors de la création du log d'audit: {}", e.getMessage(), e);
+            log.warn("⚠️ Erreur lors de la création du log d'audit: {}", e.getMessage());
         }
     }
 

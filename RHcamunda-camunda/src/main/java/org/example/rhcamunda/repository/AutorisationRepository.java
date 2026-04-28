@@ -58,7 +58,7 @@ public interface AutorisationRepository extends JpaRepository<Autorisation, Long
     /**
      * Historique par matricule (pour EvaluationService)
      */
-    @Query("SELECT a FROM Autorisation a " +
+    @Query("SELECT a FROM Autorisation a JOIN FETCH a.employe " +
             "WHERE a.employe.matricule = :matricule " +
             "AND a.date BETWEEN :debut AND :fin " +
             "AND a.statut = :statut")
@@ -72,7 +72,7 @@ public interface AutorisationRepository extends JpaRepository<Autorisation, Long
     // 🔹 RECHERCHE: Trouver une autorisation
     // ========================================================================
 
-    @Query("SELECT a FROM Autorisation a WHERE a.id = :id AND a.employe.id = :employeId")
+    @Query("SELECT a FROM Autorisation a JOIN FETCH a.employe WHERE a.id = :id AND a.employe.id = :employeId")
     Optional<Autorisation> findByEmployeIdAndId(@Param("employeId") Long employeId,
                                                 @Param("id") Long id);
 
@@ -115,7 +115,7 @@ public interface AutorisationRepository extends JpaRepository<Autorisation, Long
     // 🔹 EXPORT: Données pour rapports
     // ========================================================================
 
-    @Query("SELECT a FROM Autorisation a " +
+    @Query("SELECT a FROM Autorisation a JOIN FETCH a.employe " +
             "WHERE a.statut = 'VALIDEE' " +
             "AND YEAR(a.date) = YEAR(:mois) AND MONTH(a.date) = MONTH(:mois) " +
             "ORDER BY a.date DESC")
@@ -145,7 +145,7 @@ public interface AutorisationRepository extends JpaRepository<Autorisation, Long
     /**
      * Demandes en attente pour un manager (ses subordonnés)
      */
-    @Query("SELECT a FROM Autorisation a " +
+    @Query("SELECT a FROM Autorisation a JOIN FETCH a.employe " +
             "WHERE a.employe.chefHierarchique.matricule = :matriculeChef " +
             "AND a.statut = 'EN_ATTENTE'")
     List<Autorisation> findPendingForManager(@Param("matriculeChef") String matriculeChef);

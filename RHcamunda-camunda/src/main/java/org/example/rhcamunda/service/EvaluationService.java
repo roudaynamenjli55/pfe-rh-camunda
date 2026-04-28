@@ -31,6 +31,7 @@ public class EvaluationService {
     private final CampagneEvaluationRepository campagneEvaluationRepository;
     private final EmployeRepository employeRepository;
     private final JwtUtil jwtUtil;
+    private final ParametreGlobalService parametreGlobalService;
 
     @PreAuthorize("hasRole('ROLE_EMPLOYE')")
     @Transactional
@@ -95,8 +96,14 @@ public class EvaluationService {
             throw new IllegalStateException("Évaluation déjà traitée ou non prête");
         }
 
-        // ✅ Utilise la méthode de l'entity pour évaluer par manager
-        evaluation.evaluerParManager(requestDTO.getScoreFinal(), requestDTO.getCommentaireManager());
+        // ✅ Récupération dynamique des paramètres
+        double poidsAuto = parametreGlobalService.getValeurAsDouble("POIDS_AUTO_EVALUATION", 0.3);
+        double poidsManager = parametreGlobalService.getValeurAsDouble("POIDS_MANAGER_EVALUATION", 0.7);
+        double penaliteConge = parametreGlobalService.getValeurAsDouble("PENALITE_PAR_CONGE", 0.5);
+        double penaliteAuto = parametreGlobalService.getValeurAsDouble("PENALITE_PAR_AUTORISATION", 0.2);
+
+        // ✅ Utilise la méthode de l'entity pour évaluer par manager avec paramètres dynamiques
+        evaluation.evaluerParManager(requestDTO.getScoreFinal(), requestDTO.getCommentaireManager(), poidsAuto, poidsManager, penaliteConge, penaliteAuto);
 
         if (requestDTO.isValidee()) {
             evaluation.setStatut("VALIDEE");

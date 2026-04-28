@@ -61,32 +61,42 @@ public class Evaluation {
     }
 
     // Méthode pour évaluation manager
-    public void evaluerParManager(Integer score, String commentaire) {
+    public void evaluerParManager(Integer score, String commentaire, double poidsAuto, double poidsManager, double penaliteConge, double penaliteAuto) {
         this.scoreManager = score;
         this.commentaireManager = commentaire;
         this.dateEvaluationManager = LocalDate.now();
         this.statut = "MANAGER_EVALUATION_FAITE";
-        calculerScoreFinal();
+        calculerScoreFinal(poidsAuto, poidsManager, penaliteConge, penaliteAuto);
     }
 
     // Méthode pour validation RH
-    public void validerParRH(Integer score, String commentaire) {
+    public void validerParRH(Integer score, String commentaire, double poidsAuto, double poidsManager, double penaliteConge, double penaliteAuto) {
         this.scoreRH = score;
         this.commentaireRH = commentaire;
         this.dateEvaluationRH = LocalDate.now();
         this.statut = "VALIDEE";
         this.dateValidation = LocalDateTime.now();
-        calculerScoreFinal();
+        calculerScoreFinal(poidsAuto, poidsManager, penaliteConge, penaliteAuto);
     }
 
     // Calcul dynamique du score final
-    public void calculerScoreFinal() {
+    public void calculerScoreFinal(double poidsAuto, double poidsManager, double penaliteConge, double penaliteAuto) {
+        double scoreBase = 0.0;
         if (scoreAutoEvaluation != null && scoreManager != null) {
-            // Pondération: 30% auto-évaluation, 70% manager
-            this.scoreFinal = (scoreAutoEvaluation * 0.3) + (scoreManager * 0.7);
+            scoreBase = (scoreAutoEvaluation * poidsAuto) + (scoreManager * poidsManager);
         } else if (scoreManager != null) {
-            this.scoreFinal = scoreManager.doubleValue();
+            scoreBase = scoreManager.doubleValue();
         }
+        
+        double malus = 0.0;
+        if (nbCongesPris != null) {
+            malus += nbCongesPris * penaliteConge;
+        }
+        if (nbAutorisationsPrises != null) {
+            malus += nbAutorisationsPrises * penaliteAuto;
+        }
+        
+        this.scoreFinal = Math.max(0.0, scoreBase - malus);
     }
 
     public boolean estComplet() {

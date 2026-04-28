@@ -7,10 +7,20 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface DemandeRepository extends JpaRepository<Demande, Long> {
+
+    List<Demande> findByStatut(String statut);
+
+    List<Demande> findByDateCreationBetween(LocalDateTime debut, LocalDateTime fin);
+
+    long countByTypeAndDateCreationBetween(String type, LocalDateTime debut, LocalDateTime fin);
 
     // =================================================================
     // 🔹 RECHERCHES PAR MATRICULE (DYNAMIQUE)
@@ -20,13 +30,13 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
      * Trouver toutes les demandes d'un employé par son matricule
      * Triées par date de création (plus récente en premier)
      */
-    @Query("SELECT d FROM Demande d WHERE d.employe.matricule = :matricule ORDER BY d.dateCreation DESC")
+    @Query("SELECT d FROM Demande d JOIN FETCH d.employe WHERE d.employe.matricule = :matricule ORDER BY d.dateCreation DESC")
     List<Demande> findByEmployeMatricule(@Param("matricule") String matricule);
 
     /**
      * Trouver les demandes par matricule et statut
      */
-    @Query("SELECT d FROM Demande d WHERE d.employe.matricule = :matricule AND d.statut = :statut ORDER BY d.dateCreation DESC")
+    @Query("SELECT d FROM Demande d JOIN FETCH d.employe WHERE d.employe.matricule = :matricule AND d.statut = :statut ORDER BY d.dateCreation DESC")
     List<Demande> findByEmployeMatriculeAndStatut(
             @Param("matricule") String matricule,
             @Param("statut") String statut
@@ -35,7 +45,7 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
     /**
      * Trouver les demandes par matricule et période
      */
-    @Query("SELECT d FROM Demande d WHERE d.employe.matricule = :matricule " +
+    @Query("SELECT d FROM Demande d JOIN FETCH d.employe WHERE d.employe.matricule = :matricule " +
             "AND d.dateCreation BETWEEN :dateDebut AND :dateFin " +
             "ORDER BY d.dateCreation DESC")
     List<Demande> findByEmployeMatriculeAndPeriode(
@@ -83,7 +93,7 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
     /**
      * Recherche dynamique avec plusieurs critères optionnels
      */
-    @Query("SELECT d FROM Demande d WHERE " +
+    @Query("SELECT d FROM Demande d JOIN FETCH d.employe WHERE " +
             "(:matricule IS NULL OR d.employe.matricule = :matricule) " +
             "AND (:statut IS NULL OR d.statut = :statut) " +
             "AND (:type IS NULL OR d.motif LIKE CONCAT('%', :type, '%')) " +
@@ -101,7 +111,7 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
     /**
      * Trouver les demandes en attente de validation par le chef hiérarchique
      */
-    @Query("SELECT d FROM Demande d WHERE d.chefHierarchique.matricule = :matriculeChef " +
+    @Query("SELECT d FROM Demande d JOIN FETCH d.employe WHERE d.chefHierarchique.matricule = :matriculeChef " +
             "AND d.statut = 'EN_ATTENTE' ORDER BY d.dateCreation ASC")
     List<Demande> findDemandesEnAttenteParChef(
             @Param("matriculeChef") String matriculeChef
@@ -110,7 +120,7 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
     /**
      * Trouver les demandes validées/rejetées par un chef
      */
-    @Query("SELECT d FROM Demande d WHERE d.chefHierarchique.matricule = :matriculeChef " +
+    @Query("SELECT d FROM Demande d JOIN FETCH d.employe WHERE d.chefHierarchique.matricule = :matriculeChef " +
             "AND d.statut IN ('VALIDEE', 'REJETEE') " +
             "ORDER BY d.dateValidation DESC")
     List<Demande> findDemandesTraiteesParChef(
@@ -141,10 +151,26 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
     /**
      * Demandes par période pour un rapport
      */
-    @Query("SELECT d FROM Demande d WHERE d.dateCreation BETWEEN :debut AND :fin " +
+    @Query("SELECT d FROM Demande d JOIN FETCH d.employe WHERE d.dateCreation BETWEEN :debut AND :fin " +
             "ORDER BY d.dateCreation DESC")
     List<Demande> findByPeriode(
             @Param("debut") LocalDate debut,
             @Param("fin") LocalDate fin
     );
+
+    // =================================================================
+    // 📄 PAGINATION (Angular Material)
+    // =================================================================
+
+    @Query(value = "SELECT d FROM Demande d JOIN FETCH d.employe WHERE d.employe.matricule = :matricule ORDER BY d.dateCreation DESC",
+           countQuery = "SELECT COUNT(d) FROM Demande d WHERE d.employe.matricule = :matricule")
+    Page<Demande> findByEmployeMatriculePagine(@Param("matricule") String matricule, Pageable pageable);
+
+    @Query(value = "SELECT d FROM Demande d JOIN FETCH d.employe WHERE d.statut = :statut ORDER BY d.dateCreation DESC",
+           countQuery = "SELECT COUNT(d) FROM Demande d WHERE d.statut = :statut")
+    Page<Demande> findByStatutPagine(@Param("statut") String statut, Pageable pageable);
+
+    @Query(value = "SELECT d FROM Demande d JOIN FETCH d.employe ORDER BY d.dateCreation DESC",
+           countQuery = "SELECT COUNT(d) FROM Demande d")
+    Page<Demande> findAllPagine(Pageable pageable);
 }

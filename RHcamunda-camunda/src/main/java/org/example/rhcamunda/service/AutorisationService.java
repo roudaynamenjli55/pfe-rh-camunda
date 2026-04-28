@@ -22,6 +22,7 @@ public class AutorisationService {
 
     private final AutorisationRepository autorisationRepo;
     private final EmployeService employeService;
+    private final ParametreGlobalService parametreGlobalService;
 
     // =================================================================
     // 🔹 VÉRIFICATION QUOTA (par MATRICULE)
@@ -37,8 +38,9 @@ public class AutorisationService {
         long count = autorisationRepo.countByEmployeIdAndTypeAndMonth(
                 emp.getId(), type, premierJourMois);
 
-        log.debug("Quota vérifié pour matricule {}: {} autorisations (max 2)", matricule, count);
-        return count < 2;
+        int maxAutorisations = parametreGlobalService.getValeurAsInt("MAX_AUTORISATIONS_MOIS", 2);
+        log.debug("Quota vérifié pour matricule {}: {} autorisations (max {})", matricule, count, maxAutorisations);
+        return count < maxAutorisations;
     }
 
     // =================================================================
@@ -204,5 +206,20 @@ public class AutorisationService {
     public boolean demandeExisteDeja(String matricule, LocalDate date, String type) {
         Employe emp = employeService.trouverParMatricule(matricule);
         return autorisationRepo.existsByEmployeAndDateAndType(emp, date, type);
+    }
+    // =================================================================
+// 🔹 CHATBOT : Nombre d'autorisations utilisées ce mois
+// =================================================================
+
+    @Transactional(readOnly = true)
+    public int getNombreAutorisationsMois(Long employeId) {
+        LocalDate premierJourMois = LocalDate.now().withDayOfMonth(1);
+        // On utilise ton repository existant countByEmployeIdAndTypeAndMonth
+        // en comptant tous types confondus (PERSONNEL + SERVICE)
+        long countPersonnel = autorisationRepo.countByEmployeIdAndTypeAndMonth(
+                employeId, "PERSONNEL", premierJourMois);
+        long countService = autorisationRepo.countByEmployeIdAndTypeAndMonth(
+                employeId, "SERVICE", premierJourMois);
+        return (int)(countPersonnel + countService);
     }
 }
